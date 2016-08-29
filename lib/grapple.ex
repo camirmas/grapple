@@ -7,7 +7,7 @@ defmodule Grapple do
     children = [
       worker(Grapple.Store, []),
       worker(:poolboy, [[name: {:local, :rethinkdb_pool},
-                         worker_module: Grapple.Store,
+                         worker_module: RethinkDB.Connection,
                          size: 10,
                          max_overflow: 0], []]),
     ]
