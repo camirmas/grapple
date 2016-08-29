@@ -1,6 +1,6 @@
 # Grapple
 
-**TODO: Add description**
+> Webhook magic in Elixir
 
 ## Installation
 
