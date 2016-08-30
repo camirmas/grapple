@@ -20,5 +20,10 @@ If [available in Hex](https://hex.pm/docs/publish), the package can be installed
     def application do
       [applications: [:grapple]]
     end
-    ```
+    ``
+## Running
+
+```bash
+iex -S mix
+```
 
