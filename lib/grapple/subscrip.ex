@@ -8,22 +8,27 @@ defmodule Grapple.Subscription do
     :ets.insert(:subscrips, {uuid, subscription})
   end
 
-  defp start do
-    receive do
-      {:cast, value, from} -> broadcast(value)
-    end
+  def all do
+    :ets.select(:subscrips)
+  end
+
+  def matches(data) do
+    false # TODO
+  end
+
+  def start do
+    spawn fn -> listen() end
   end
 
   def broadcast(data) do
     Enum.map(all(), fn subscrip -> IO.puts "TODO: broadcast via HTTP!" end)
   end
 
-  def all do
-    :ets.select(:subscrips)
+  defp listen do
+    receive do
+      {:cast, value, from} -> broadcast(value)
+    end
   end
 
-  def matches(data) do
-    false
-  end
-end
+ end
 
