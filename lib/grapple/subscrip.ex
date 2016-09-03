@@ -1,11 +1,11 @@
 defmodule Grapple.Subscription do
-  defstruct [:uuid, :url, :method, :life, :headers, :body, :query]
+  defstruct [:url, :method, :life, :headers, :body, :query]
 
   table = :ets.new(:subscrips, [:set, :protected, :named_table])
 
   def create(subscription) do
-    id = UUID.uuid4(:default)
-    :ets.insert(:subscrips, {id, subscription})
+    uuid = UUID.uuid4(:default)
+    :ets.insert(:subscrips, {uuid, subscription})
   end
 
   defp start do
