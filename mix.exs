@@ -33,8 +33,6 @@ defmodule Grapple.Mixfile do
     [
       {:phoenix, "~> 1.2.1"},
       {:graphql, "~> 0.3"},
-      {:rethinkdb, "~> 0.4.0"},
-      {:poolboy, "~> 1.5"},
     ]
   end
 end
