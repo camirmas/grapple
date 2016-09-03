@@ -33,6 +33,7 @@ defmodule Grapple.Mixfile do
     [
       {:phoenix, "~> 1.2.1"},
       {:graphql, "~> 0.3"},
+      {:uuid, "~> 1.1"}
     ]
   end
 end
