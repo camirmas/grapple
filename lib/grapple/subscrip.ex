@@ -25,7 +25,7 @@ defmodule Grapple.Subscription do
   end
 
   def broadcast(pid, data) do
-    Enum.map(all(), fn subscrip -> send pid, {:cast, subscrip, data} end)
+    Enum.map(all(nil), fn subscrip -> send pid, {:cast, subscrip, data} end)
   end
 
   def notify(subscrip, data) do
@@ -46,5 +46,4 @@ defmodule Grapple.Subscription do
       end
     end
   end
- end
-
+end
