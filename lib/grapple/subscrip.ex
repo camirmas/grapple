@@ -1,34 +1,50 @@
 defmodule Grapple.Subscription do
-  defstruct [:url, :method, :life, :headers, :body, :query]
+  defstruct [:url, :owner, :method, :life, :headers, :body, :query]
 
   table = :ets.new(:subscrips, [:set, :protected, :named_table])
 
   def create(subscription) do
     uuid = UUID.uuid4(:default)
-    :ets.insert(:subscrips, {uuid, subscription})
+    :ets.insert(:subscrips, {uuid, subscription, self})
   end
 
-  def all do
-    :ets.select(:subscrips)
+  def all(owner) do
+    :ets.select(:subscrips, owner)
   end
 
-  def matches(data) do
-    false # TODO
+  def matches(subscrip, data) do
+    false # TODO: use GraphQL or JSON Schema
   end
 
   def start do
-    spawn fn -> listen() end
+    spawn fn -> listen() end # TODO: use spawn_link instead.?
   end
 
-  def broadcast(data) do
-    Enum.map(all(), fn subscrip -> IO.puts "TODO: broadcast via HTTP!" end)
+  def delete(subscrip) do
+    :ets.delete(:subscrips, subscrip)
+  end
+
+  def broadcast(pid, data) do
+    Enum.map(all(), fn subscrip -> send pid, {:cast, subscrip, data} end)
+  end
+
+  def notify(subscrip, data) do
+    case HTTPoison.get subscrip.url, subscrip.body, subscrip.headers do
+      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
+        IO.puts body # TODO: possibly track successful messages
+      {:ok, %HTTPoison.Response{status_code: 404}} ->
+        delete subscrip
+      {:error, %HTTPoison.Error{reason: reason}} ->
+        IO.inspect reason
+    end
   end
 
   defp listen do
     receive do
-      {:cast, value, from} -> broadcast(value)
+      {:cast, subscrip, data} -> cond do
+        matches subscrip, data -> notify subscrip, data
+      end
     end
   end
-
  end
 
