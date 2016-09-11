@@ -81,16 +81,25 @@ defmodule Grapple.Hook do
     {:noreply, {webhooks, stash_pid}}
   end
 
+  @doc """
+  Clears out all webhooks from the stash
+  """
   def handle_cast(:clear_webhooks, {_webhooks, stash_pid}) do
     {:noreply, {[], stash_pid}}
   end
 
+  @doc """
+  Removes a single webhook from the stash
+  """
   def terminate(_reason, {webhooks, stash_pid}) do
     Grapple.Stash.save_hooks stash_pid, webhooks
   end
 
   # Helpers
 
+  @doc """
+  Messages a subscriber webhook with the latest updates via HTTP
+  """
   defp notify(webhook) do
     case HTTPoison.get webhook.url, webhook.body, webhook.headers do
       {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
@@ -103,10 +112,17 @@ defmodule Grapple.Hook do
     end
   end
 
+  @doc """
+  Provides a unique topic based on an arbitrary name and the lexical module
+  """
   defmacro topicof(name) do
     quote do: "#{__MODULE__}.#{name}"
   end
 
+  @doc """
+  Allows users to define hookable functions that automatically publish
+  to subscribers whenever they are invoked
+  """
   # TODO: generate a unique identifier based on module.method
   # TODO: support arguments somehow, might be tricky
   defmacro defhook(name, do: block) do
