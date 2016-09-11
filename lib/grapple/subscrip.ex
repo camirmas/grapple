@@ -47,7 +47,9 @@ defmodule Grapple.Subscription do
     end
   end
 
-  defmacro defhook(name, expr, do: block) do # TODO: support arguments somehow
+  # TODO: generate a unique identifier based on module.method
+  # TODO: support arguments somehow, might be tricky
+  defmacro defhook(name, do: block) do # TODO: support arguments somehow
     quote do
       def unquote(name) do
         result = unquote block
