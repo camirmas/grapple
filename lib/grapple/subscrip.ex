@@ -8,7 +8,7 @@ defmodule Grapple.Subscription do
     :ets.insert(:subscrips, {uuid, subscription, self})
   end
 
-  def all(owner) do
+  def all(owner) do # TODO: probably want to scope/filter to module.method
     :ets.select(:subscrips, owner)
   end
 
@@ -43,6 +43,16 @@ defmodule Grapple.Subscription do
     receive do
       {:cast, subscrip, data} -> cond do
         matches subscrip, data -> notify subscrip, data
+      end
+    end
+  end
+
+  defmacro defhook(name, expr, do: block) do # TODO: support arguments somehow
+    quote do
+      def unquote(name) do
+        result = unquote block
+
+        broadcast self(), result # TODO: replace self with Supervisor PID
       end
     end
   end
