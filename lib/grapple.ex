@@ -5,6 +5,7 @@ defmodule Grapple do
     import Supervisor.Spec
 
     children = [
+      worker(Grapple.Hook, []),
       supervisor(Phoenix.PubSub.PG2, [Grapple.PubSub, []])
     ]
 
