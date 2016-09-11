@@ -1,50 +1,88 @@
-defmodule Grapple.Subscription do
-  defstruct [:url, :owner, :method, :life, :headers, :body, :query]
+defmodule Grapple.Hook do
+  @moduledoc """
 
-  table = :ets.new(:subscrips, [:set, :protected, :named_table])
+  """
+  use GenServer
 
-  def create(subscription) do
-    uuid = UUID.uuid4(:default)
-    :ets.insert(:subscrips, {uuid, subscription, self})
+  defmodule Webhook do
+    @enforce_keys [:topic, :url]
+    defstruct [
+      :topic,
+      :url,
+      :owner,
+      :life,
+      :ref,
+      method: "GET",
+      headers: %{},
+      body: %{},
+      query: %{},
+    ]
   end
 
-  def all(owner) do
-    :ets.select(:subscrips, owner)
+  # API
+
+  def start_link do
+    GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
 
-  def matches(subscrip, data) do
-    false # TODO: use GraphQL or JSON Schema
+  def subscribe(webhook = %Webhook{}) do
+    GenServer.call(__MODULE__, {:subscribe, webhook})
   end
 
-  def start do
-    spawn fn -> listen() end # TODO: use spawn_link instead.?
+  def get_webhooks do
+    GenServer.call(__MODULE__, :get_webhooks)
   end
 
-  def delete(subscrip) do
-    :ets.delete(:subscrips, subscrip)
+  def broadcast(topic) do
+    GenServer.cast(__MODULE__, {:broadcast, topic})
   end
 
-  def broadcast(pid, data) do
-    Enum.map(all(), fn subscrip -> send pid, {:cast, subscrip, data} end)
+  # Callbacks
+
+  @doc """
+  Callback for subscribing a Webhook. Adds a unique
+  ref and adds to the list if it is not already in the list,
+  and returns the topic name and unique ref of that Webhook
+  """
+  def handle_call({:subscribe, webhook}, _from, webhooks) do
+    if webhook in webhooks do
+        Map.put(webhook, :ref, make_ref())
+        {:reply, {webhook.topic, webhook.ref}, [webhook | webhooks]}
+    else
+        {:reply, webhooks, webhooks}
+    end
   end
 
-  def notify(subscrip, data) do
-    case HTTPoison.get subscrip.url, subscrip.body, subscrip.headers do
+  @doc """
+  Returns all webhooks.
+  """
+  def handle_call(:get_webhooks, _from, webhooks) do
+    {:reply, webhooks, webhooks}
+  end
+
+  @doc """
+  Executes an HTTP request for every Webhook of the
+  specified topic
+  """
+  def handle_cast({:broadcast, topic}, webhooks) do
+    webhooks
+    |> Enum.filter(&(&1.topic == topic))
+    |> Enum.map(&notify/1)
+  end
+
+  # Helpers
+
+  defp notify(webhook) do
+    case HTTPoison.get webhook.url, webhook.body, webhook.headers do
       {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
         IO.puts body # TODO: possibly track successful messages
       {:ok, %HTTPoison.Response{status_code: 404}} ->
-        delete subscrip
+        #delete subscrip
+        IO.puts "404"
       {:error, %HTTPoison.Error{reason: reason}} ->
         IO.inspect reason
     end
   end
 
-  defp listen do
-    receive do
-      {:cast, subscrip, data} -> cond do
-        matches subscrip, data -> notify subscrip, data
-      end
-    end
-  end
  end
 
