@@ -1,4 +1,4 @@
-defmodule Grapple.SubSupervisor do
+defmodule Grapple.HookSupervisor do
   use Supervisor
 
   def start_link(stash_pid) do
