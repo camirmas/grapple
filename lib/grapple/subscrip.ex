@@ -24,7 +24,7 @@ defmodule Grapple.Subscription do
     :ets.delete(:subscrips, subscrip)
   end
 
-  def broadcast(pid, data) do
+  def broadcast(pid, topic, data) do
     Enum.map(all(nil), fn subscrip -> send pid, {:cast, subscrip, data} end)
   end
 
@@ -47,14 +47,19 @@ defmodule Grapple.Subscription do
     end
   end
 
+  defmacro topicof(name) do
+    quote do: "#{__MODULE__}.#{name}"
+  end
+
   # TODO: generate a unique identifier based on module.method
   # TODO: support arguments somehow, might be tricky
-  defmacro defhook(name, do: block) do # TODO: support arguments somehow
+  defmacro defhook(name, do: block) do
     quote do
       def unquote(name) do
+        topic  = topicof name
         result = unquote block
 
-        broadcast self(), result # TODO: replace self with Supervisor PID
+        broadcast self(), topic, result # TODO: replace self with Supervisor PID
       end
     end
   end
