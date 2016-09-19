@@ -9,7 +9,7 @@ defmodule Grapple.Supervisor do
 
   def start_workers(sup, webhooks) do
     {:ok, stash} = Supervisor.start_child(sup, worker(Grapple.Stash, [webhooks]))
-    Supervisor.start_child(sup, supervisor(Grapple.SubSupervisor, [stash]))
+    Supervisor.start_child(sup, supervisor(Grapple.HookSupervisor, [stash]))
   end
 
   def init(_) do

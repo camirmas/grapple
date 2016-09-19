@@ -4,20 +4,19 @@ defmodule Grapple.Hook do
   """
   use GenServer
 
-  defmodule Webhook do
-    @enforce_keys [:topic, :url]
-    defstruct [
-      :topic,
-      :url,
-      :owner,
-      :life,
-      :ref,
-      method: "GET",
-      headers: %{},
-      body: %{},
-      query: %{},
-    ]
-  end
+  # TODO: should probably make this configurable for users
+  @enforce_keys [:topic, :url]
+  defstruct [
+    :topic,
+    :url,
+    :owner,
+    :life,
+    :ref,
+    method: "POST",
+    headers: %{},
+    body: %{},
+    query: %{},
+  ]
 
   # API
 
@@ -25,7 +24,7 @@ defmodule Grapple.Hook do
     GenServer.start_link __MODULE__, stash_pid, name: __MODULE__
   end
 
-  def subscribe(webhook = %Webhook{}) do
+  def subscribe(webhook = %Grapple.Hook{}) do
     GenServer.call __MODULE__, {:subscribe, webhook}
   end
 
@@ -35,6 +34,14 @@ defmodule Grapple.Hook do
 
   def broadcast(topic) do
     GenServer.cast __MODULE__, {:broadcast, topic}
+  end
+
+  def remove_webhook(ref) when is_reference(ref) do
+    GenServer.cast __MODULE__, {:remove_webhook, ref}
+  end
+
+  def remove_topic(topic) when is_binary(topic) do
+    GenServer.cast __MODULE__, {:remove_topic, topic}
   end
 
   def clear_webhooks do
@@ -49,9 +56,8 @@ defmodule Grapple.Hook do
   end
 
   @doc """
-  Callback for subscribing a Webhook. Adds a unique
-  ref and adds to the list if it is not already in the list,
-  and returns the topic name and unique ref of that Webhook
+  Callback for subscribing a Webhook. Adds a unique ref,
+  adds to the list, and returns the topic name and unique ref of that Webhook
   """
   def handle_call({:subscribe, webhook}, _from, state = {webhooks, stash_pid}) do
     if webhook in webhooks do
@@ -82,6 +88,25 @@ defmodule Grapple.Hook do
   end
 
   @doc """
+  Removes a single webhook by reference
+  """
+  def handle_cast({:remove_webhook, ref}, {webhooks, stash_pid}) do
+    webhooks = webhooks
+      |> Enum.reject(&(&1.ref == ref))
+    {:noreply, {webhooks, stash_pid}}
+  end
+
+  @doc """
+  Removes all webhooks under a certain topic,
+  by topic name
+  """
+  def handle_cast({:remove_topic, topic}, {webhooks, stash_pid}) do
+    webhooks = webhooks
+      |> Enum.reject(&(&1.topic == topic))
+    {:noreply, {webhooks, stash_pid}}
+  end
+
+  @doc """
   Clears out all webhooks from the stash
   """
   def handle_cast(:clear_webhooks, {_webhooks, stash_pid}) do
@@ -89,7 +114,8 @@ defmodule Grapple.Hook do
   end
 
   @doc """
-  Removes a single webhook from the stash
+  If the server is about to exit (i.e. crashing),
+  save the current state in the stash
   """
   def terminate(_reason, {webhooks, stash_pid}) do
     Grapple.Stash.save_hooks stash_pid, webhooks
