@@ -1,6 +1,7 @@
 # Grapple
-
 > Webhook magic in Elixir
+
+[![CircleCI](https://circleci.com/gh/camirmas/grapple/tree/master.svg?style=shield)](https://circleci.com/gh/camirmas/grapple/tree/master)
 
 ## Installation
 
