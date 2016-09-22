@@ -4,6 +4,8 @@ defmodule Grapple.Hook do
   """
   use GenServer
 
+  @http Application.get_env(:grapple, :http)
+
   # TODO: should probably make this configurable for users
   @enforce_keys [:topic, :url]
   defstruct [
@@ -12,8 +14,8 @@ defmodule Grapple.Hook do
     :owner,
     :life,
     :ref,
-    method: "POST",
-    headers: %{},
+    method: "GET",
+    headers: [],
     body: %{},
     query: %{},
   ]
@@ -24,26 +26,47 @@ defmodule Grapple.Hook do
     GenServer.start_link __MODULE__, stash_pid, name: __MODULE__
   end
 
+  @doc """
+  Callback for subscribing a Webhook. Adds a unique ref,
+  adds to the list, and returns the topic name and unique ref of that Webhook
+  """
   def subscribe(webhook = %Grapple.Hook{}) do
     GenServer.call __MODULE__, {:subscribe, webhook}
   end
 
+  @doc """
+  Returns all webhooks.
+  """
   def get_webhooks do
     GenServer.call __MODULE__, :get_webhooks
   end
 
+  @doc """
+  Executes an HTTP request for every Webhook of the
+  specified topic
+  """
   def broadcast(topic) do
-    GenServer.cast __MODULE__, {:broadcast, topic}
+    GenServer.call __MODULE__, {:broadcast, topic}
   end
 
+  @doc """
+  Removes a single webhook by reference
+  """
   def remove_webhook(ref) when is_reference(ref) do
     GenServer.cast __MODULE__, {:remove_webhook, ref}
   end
 
+  @doc """
+  Removes all webhooks under a certain topic,
+  by topic name
+  """
   def remove_topic(topic) when is_binary(topic) do
     GenServer.cast __MODULE__, {:remove_topic, topic}
   end
 
+  @doc """
+  Clears out all webhooks from the stash
+  """
   def clear_webhooks do
     GenServer.cast __MODULE__, :clear_webhooks
   end
@@ -55,10 +78,6 @@ defmodule Grapple.Hook do
     {:ok, {webhooks, stash_pid}}
   end
 
-  @doc """
-  Callback for subscribing a Webhook. Adds a unique ref,
-  adds to the list, and returns the topic name and unique ref of that Webhook
-  """
   def handle_call({:subscribe, webhook}, _from, state = {webhooks, stash_pid}) do
     if webhook in webhooks do
       {:reply, {webhook.topic, webhook.ref}, state}
@@ -68,47 +87,30 @@ defmodule Grapple.Hook do
     end
   end
 
-  @doc """
-  Returns all webhooks.
-  """
   def handle_call(:get_webhooks, _from, state = {webhooks, _stash_pid}) do
     {:reply, webhooks, state}
   end
 
-  @doc """
-  Executes an HTTP request for every Webhook of the
-  specified topic
-  """
-  def handle_cast({:broadcast, topic}, {webhooks, stash_pid}) do
-    webhooks
+  def handle_call({:broadcast, topic}, _from, {webhooks, stash_pid}) do
+    resp_log = webhooks
       |> Enum.filter(&(&1.topic == topic))
-      |> Enum.each(&notify/1)
+      |> Enum.map(&notify/1)
 
-    {:noreply, {webhooks, stash_pid}}
+    {:reply, resp_log, {webhooks, stash_pid}}
   end
 
-  @doc """
-  Removes a single webhook by reference
-  """
   def handle_cast({:remove_webhook, ref}, {webhooks, stash_pid}) do
     webhooks = webhooks
       |> Enum.reject(&(&1.ref == ref))
     {:noreply, {webhooks, stash_pid}}
   end
 
-  @doc """
-  Removes all webhooks under a certain topic,
-  by topic name
-  """
   def handle_cast({:remove_topic, topic}, {webhooks, stash_pid}) do
     webhooks = webhooks
       |> Enum.reject(&(&1.topic == topic))
     {:noreply, {webhooks, stash_pid}}
   end
 
-  @doc """
-  Clears out all webhooks from the stash
-  """
   def handle_cast(:clear_webhooks, {_webhooks, stash_pid}) do
     {:noreply, {[], stash_pid}}
   end
@@ -126,15 +128,32 @@ defmodule Grapple.Hook do
   @doc """
   Messages a subscriber webhook with the latest updates via HTTP
   """
-  defp notify(webhook) do
-    case HTTPoison.get webhook.url, webhook.body, webhook.headers do
-      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
-        IO.puts body # TODO: possibly track successful messages
-      {:ok, %HTTPoison.Response{status_code: 404}} ->
+  defp notify(webhook = %Grapple.Hook{method: "GET"}) do
+    @http.get(webhook.url, webhook.headers)
+    |> handle_response
+  end
+  defp notify(webhook = %Grapple.Hook{method: "POST"}) do
+    @http.post(webhook.url, webhook.headers)
+    |> handle_response
+  end
+  defp notify(webhook = %Grapple.Hook{method: "PUT"}) do
+    @http.put(webhook.url, webhook.headers)
+    |> handle_response
+  end
+  defp notify(webhook = %Grapple.Hook{method: "DELETE"}) do
+    @http.delete(webhook.url, webhook.headers)
+    |> handle_response
+  end
+
+  defp handle_response(response) do
+    case response do
+      {:ok, %{status_code: 200, body: body}} ->
+        {:success, body: body}
+      {:ok, %{status_code: 404}} ->
         #delete subscrip
-        IO.puts "404"
-      {:error, %HTTPoison.Error{reason: reason}} ->
-        IO.inspect reason
+        :not_found
+      {:error, %{reason: reason}} ->
+        {:error, reason: reason}
     end
   end
 
