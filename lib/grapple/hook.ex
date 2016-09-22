@@ -96,6 +96,8 @@ defmodule Grapple.Hook do
       |> Enum.filter(&(&1.topic == topic))
       |> Enum.map(&notify/1)
 
+    # TODO: Create a logging service for response info
+
     {:reply, resp_log, {webhooks, stash_pid}}
   end
 

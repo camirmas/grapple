@@ -1,5 +1,4 @@
 defmodule Grapple.Test.HttpClient do
-  alias Grapple.Hook
 
   def get("NOT_FOUND", _headers) do
     {:ok, %{status_code: 404}}
@@ -10,4 +9,5 @@ defmodule Grapple.Test.HttpClient do
   def get(_url, _headers) do
     {:ok, %{status_code: 200, body: %{}}}
   end
+
 end
