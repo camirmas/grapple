@@ -48,8 +48,8 @@ defmodule Grapple.Hook do
   Executes an HTTP request for every Webhook of the
   specified topic.
   """
-  def broadcast(topic) do
-    GenServer.call __MODULE__, {:broadcast, topic}
+  def broadcast(topic, body) do
+    GenServer.call __MODULE__, {:broadcast, {topic, body}}
   end
 
   @doc """
@@ -95,10 +95,10 @@ defmodule Grapple.Hook do
     {:reply, webhooks, state}
   end
 
-  def handle_call({:broadcast, topic}, _from, {webhooks, stash_pid}) do
+  def handle_call({:broadcast, {topic, body}}, _from, {webhooks, stash_pid}) do
     resp_log = webhooks
       |> Enum.filter(&(&1.topic == topic))
-      |> Enum.map(&notify/1)
+      |> Enum.map(fn topic -> notify(topic, body) end)
 
     # TODO: Create a logging service for response info
 
@@ -134,20 +134,25 @@ defmodule Grapple.Hook do
   @doc """
   Messages a subscriber webhook with the latest updates via HTTP
   """
-  defp notify(webhook) do
-    _notify(webhook)
+  defp notify(webhook, body) when is_nil(body) do
+    _notify(webhook, body)
     |> handle_response
   end
-  defp _notify(webhook = %Grapple.Hook{method: "GET"}) do
+  defp notify(webhook, body) when is_map(body) do
+    _notify(webhook, body)
+    |> handle_response
+  end
+
+  defp _notify(webhook = %Grapple.Hook{method: "GET"}, _body) do
     @http.get(webhook.url, webhook.headers)
   end
-  defp _notify(webhook = %Grapple.Hook{method: "POST"}) do
-    @http.post(webhook.url, webhook.headers)
+  defp _notify(webhook = %Grapple.Hook{method: "POST"}, body) do
+    @http.post(webhook.url, webhook.headers, body)
   end
-  defp _notify(webhook = %Grapple.Hook{method: "PUT"}) do
-    @http.put(webhook.url, webhook.headers)
+  defp _notify(webhook = %Grapple.Hook{method: "PUT"}, body) do
+    @http.put(webhook.url, webhook.headers, body)
   end
-  defp _notify(webhook = %Grapple.Hook{method: "DELETE"}) do
+  defp _notify(webhook = %Grapple.Hook{method: "DELETE"}, _body) do
     @http.delete(webhook.url, webhook.headers)
   end
 
@@ -160,6 +165,12 @@ defmodule Grapple.Hook do
         :not_found
       {:error, %{reason: reason}} ->
         {:error, reason: reason}
+    end
+  end
+
+  defmacro __using__(_opts) do
+    quote do
+      import Grapple.Hook
     end
   end
 
@@ -182,7 +193,7 @@ defmodule Grapple.Hook do
         topic  = topicof name
         result = unquote block
 
-        broadcast self(), topic, result # TODO: replace self with Supervisor PID
+        broadcast topic, result
       end
     end
   end

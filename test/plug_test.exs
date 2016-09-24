@@ -15,6 +15,6 @@ defmodule Grapple.PlugTest do
   end
 
   test "hook triggers on call", %{conn: conn} do
-    assert Grapple.Plug.call(conn, @params)
+    assert Grapple.Plug.call(conn, @params, nil)
   end
 end

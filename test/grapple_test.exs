@@ -46,7 +46,7 @@ defmodule GrappleTest do
 
     test "sends a successful hook", %{hook: hook} do
       Hook.subscribe hook
-      [resp] = Hook.broadcast hook.topic
+      [resp] = Hook.broadcast hook.topic, nil
 
       assert {:success, body: _body} = resp
     end
@@ -55,7 +55,7 @@ defmodule GrappleTest do
       hook = Map.put(hook, :url, "NOT_FOUND")
       Hook.subscribe hook
 
-      [resp] = Hook.broadcast hook.topic
+      [resp] = Hook.broadcast hook.topic, nil
 
       assert resp == :not_found
     end
@@ -64,11 +64,21 @@ defmodule GrappleTest do
       hook = Map.put(hook, :url, "ERROR")
       Hook.subscribe hook
 
-      [resp] = Hook.broadcast hook.topic
+      [resp] = Hook.broadcast hook.topic, nil
 
       assert {:error, reason: _} = resp
     end
 
   end
+
+  # describe "defhook" do
+  #   use Grapple.Hook
+
+  #   res = defhook testing do
+  #     123
+  #   end
+
+  #   assert res == 123
+  # end
 
 end

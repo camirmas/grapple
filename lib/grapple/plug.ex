@@ -5,8 +5,8 @@ defmodule Grapple.Plug do
     Keyword.fetch! opts, :topic
   end
 
-  def call(conn, topic) do
-    resp = Hook.broadcast topic
+  def call(conn, topic, body) do
+    resp = Hook.broadcast topic, body
     conn
   end
 end
