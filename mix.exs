@@ -7,6 +7,8 @@ defmodule Grapple.Mixfile do
      elixir: "~> 1.3",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
+     description: "Webhooks service in a PubSub manner",
+     package: package,
      deps: deps(),
    
      # Docs
@@ -15,6 +17,14 @@ defmodule Grapple.Mixfile do
      docs: [# logo: "",
             canonical: "https://hexdocs.com/grapple",
             extras: ["README.md"]]]
+  end
+
+  def package do
+    [
+      maintainers: ["Cameron Irmas, Erik Vavro"],
+      licenses: ["MIT"],
+      links: %{"GitHub" => "https://github.com/camirmas/grapple"}
+    ]
   end
 
   # Configuration for the OTP application
