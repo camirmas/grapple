@@ -28,3 +28,8 @@ If [available in Hex](https://hex.pm/docs/publish), the package can be installed
 iex -S mix
 ```
 
+## Generate Docs
+
+```bash
+mix docs
+```

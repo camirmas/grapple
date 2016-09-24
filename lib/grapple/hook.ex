@@ -1,6 +1,8 @@
 defmodule Grapple.Hook do
   @moduledoc """
-
+  This module provides a GenServer that is primarily responsible for subscribing
+  to and broadcasting Webhooks. It also defines a `Hook` struct, and macros
+  for defining hooks.
   """
   use GenServer
 
@@ -22,13 +24,14 @@ defmodule Grapple.Hook do
 
   # API
 
+  @doc false
   def start_link(stash_pid) do
     GenServer.start_link __MODULE__, stash_pid, name: __MODULE__
   end
 
   @doc """
   Callback for subscribing a Webhook. Adds a unique ref,
-  adds to the list, and returns the topic name and unique ref of that Webhook
+  adds to the list, and returns the topic name and unique ref of that Webhook.
   """
   def subscribe(webhook = %Grapple.Hook{}) do
     GenServer.call __MODULE__, {:subscribe, webhook}
@@ -43,14 +46,14 @@ defmodule Grapple.Hook do
 
   @doc """
   Executes an HTTP request for every Webhook of the
-  specified topic
+  specified topic.
   """
   def broadcast(topic) do
     GenServer.call __MODULE__, {:broadcast, topic}
   end
 
   @doc """
-  Removes a single webhook by reference
+  Removes a single webhook by reference.
   """
   def remove_webhook(ref) when is_reference(ref) do
     GenServer.cast __MODULE__, {:remove_webhook, ref}
@@ -58,14 +61,14 @@ defmodule Grapple.Hook do
 
   @doc """
   Removes all webhooks under a certain topic,
-  by topic name
+  by topic name.
   """
   def remove_topic(topic) when is_binary(topic) do
     GenServer.cast __MODULE__, {:remove_topic, topic}
   end
 
   @doc """
-  Clears out all webhooks from the stash
+  Clears out all webhooks from the stash.
   """
   def clear_webhooks do
     GenServer.cast __MODULE__, :clear_webhooks
@@ -73,6 +76,7 @@ defmodule Grapple.Hook do
 
   # Callbacks
 
+  @doc false
   def init(stash_pid) do
     webhooks = Grapple.Stash.get_hooks stash_pid
     {:ok, {webhooks, stash_pid}}
@@ -119,7 +123,7 @@ defmodule Grapple.Hook do
 
   @doc """
   If the server is about to exit (i.e. crashing),
-  save the current state in the stash
+  save the current state in the stash.
   """
   def terminate(_reason, {webhooks, stash_pid}) do
     Grapple.Stash.save_hooks stash_pid, webhooks
@@ -130,21 +134,21 @@ defmodule Grapple.Hook do
   @doc """
   Messages a subscriber webhook with the latest updates via HTTP
   """
-  defp notify(webhook = %Grapple.Hook{method: "GET"}) do
+  defp notify(webhook) do
+    _notify(webhook)
+    |> handle_response
+  end
+  defp _notify(webhook = %Grapple.Hook{method: "GET"}) do
     @http.get(webhook.url, webhook.headers)
-    |> handle_response
   end
-  defp notify(webhook = %Grapple.Hook{method: "POST"}) do
+  defp _notify(webhook = %Grapple.Hook{method: "POST"}) do
     @http.post(webhook.url, webhook.headers)
-    |> handle_response
   end
-  defp notify(webhook = %Grapple.Hook{method: "PUT"}) do
+  defp _notify(webhook = %Grapple.Hook{method: "PUT"}) do
     @http.put(webhook.url, webhook.headers)
-    |> handle_response
   end
-  defp notify(webhook = %Grapple.Hook{method: "DELETE"}) do
+  defp _notify(webhook = %Grapple.Hook{method: "DELETE"}) do
     @http.delete(webhook.url, webhook.headers)
-    |> handle_response
   end
 
   defp handle_response(response) do

@@ -1,4 +1,6 @@
 defmodule Grapple.Stash do
+  @moduledoc false
+
   use GenServer
 
   # API

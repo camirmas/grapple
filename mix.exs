@@ -7,7 +7,14 @@ defmodule Grapple.Mixfile do
      elixir: "~> 1.3",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     deps: deps()]
+     deps: deps(),
+   
+     # Docs
+     name: "Grapple",
+     source_url: "https://github.com/camirmas/grapple",
+     docs: [# logo: "",
+            canonical: "https://hexdocs.com/grapple",
+            extras: ["README.md"]]]
   end
 
   # Configuration for the OTP application
@@ -34,7 +41,8 @@ defmodule Grapple.Mixfile do
       {:phoenix, "~> 1.2.1"},
       {:graphql, "~> 0.3"},
       {:httpoison, "~> 0.9.0"},
-      {:uuid, "~> 1.1"}
+      {:uuid, "~> 1.1"},
+      {:ex_doc, "~> 0.13", only: :dev},
     ]
   end
 end
