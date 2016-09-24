@@ -1,7 +1,7 @@
 defmodule Grapple.PlugTest do
   use ExUnit.Case, async: true
-  use Phoenix.ConnTest
-  alias Grapple.{Hook, Plug}
+  import Plug.Conn
+  alias Grapple.Hook
 
   @params [topic: "stuff"]
 
@@ -9,12 +9,12 @@ defmodule Grapple.PlugTest do
     Hook.clear_webhooks
     hook = %Hook{topic: "stuff", url: "elixir-lang.org"}
     Hook.subscribe(hook)
-    conn = build_conn()
+    conn = %Plug.Conn{}
 
     [hook: hook, conn: conn]
   end
 
   test "hook triggers on call", %{conn: conn} do
-    assert Plug.call(conn, @params)
+    assert Grapple.Plug.call(conn, @params)
   end
 end
