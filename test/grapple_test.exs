@@ -1,5 +1,5 @@
 defmodule GrappleTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   alias Grapple.Hook
 
   setup do
@@ -9,7 +9,6 @@ defmodule GrappleTest do
   end
 
   describe "subscribe" do
-
 
     test "can subscribe to webhooks", %{hook: hook} do
       assert {_topic, _ref} = Hook.subscribe hook
@@ -69,6 +68,7 @@ defmodule GrappleTest do
 
       assert {:error, reason: _} = resp
     end
+
   end
 
 end

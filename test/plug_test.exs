@@ -1,5 +1,5 @@
 defmodule Grapple.PlugTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   use Phoenix.ConnTest
   alias Grapple.{Hook, Plug}
 
