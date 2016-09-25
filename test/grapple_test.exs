@@ -76,14 +76,13 @@ defmodule GrappleTest do
 
     test "works" do
       defmodule Hookable do
-        defhook testing, do: "ok"
+        defhook testing, do: :ok
       end
 
       res = Hookable.testing()
 
-      assert res == "ok"
-
-      end
+      assert res == :ok
     end
+  end
 
 end
