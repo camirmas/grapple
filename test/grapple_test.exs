@@ -71,14 +71,19 @@ defmodule GrappleTest do
 
   end
 
-  # describe "defhook" do
-  #   use Grapple.Hook
+  describe "defhook" do
+    use Grapple.Hook
 
-  #   res = defhook testing do
-  #     123
-  #   end
+    test "works" do
+      defmodule Hookable do
+        defhook testing, do: "ok"
+      end
 
-  #   assert res == 123
-  # end
+      res = Hookable.testing()
+
+      assert res == "ok"
+
+      end
+    end
 
 end

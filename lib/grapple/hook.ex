@@ -168,6 +168,8 @@ defmodule Grapple.Hook do
     end
   end
 
+  # Macros
+
   defmacro __using__(_opts) do
     quote do
       import Grapple.Hook
@@ -177,23 +179,25 @@ defmodule Grapple.Hook do
   @doc """
   Provides a unique topic based on an arbitrary name and the lexical module
   """
-  defmacro topicof(name) do
-    quote do: "#{__MODULE__}.#{name}"
+  def topicof(name) do
+    "#{__MODULE__}.#{name}"
   end
 
   @doc """
   Allows users to define hookable functions that automatically publish
   to subscribers whenever they are invoked
   """
-  # TODO: generate a unique identifier based on module.method
-  # TODO: support arguments somehow, might be tricky
   defmacro defhook(name, do: block) do
+    id = name |> Macro.to_string
+
     quote do
       def unquote(name) do
-        topic  = topicof name
+        topic  = unquote id |> topicof
         result = unquote block
 
         broadcast topic, result
+
+        result
       end
     end
   end
