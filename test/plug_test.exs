@@ -1,6 +1,5 @@
 defmodule Grapple.PlugTest do
   use ExUnit.Case, async: true
-  import Plug.Conn
   alias Grapple.Hook
 
   @params [topic: "stuff"]

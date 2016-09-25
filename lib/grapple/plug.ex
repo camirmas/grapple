@@ -5,6 +5,7 @@ defmodule Grapple.Plug do
     Keyword.fetch! opts, :topic
   end
 
+  # TODO: need to revisit
   def call(conn, topic, body) do
     resp = Hook.broadcast topic, body
     conn
