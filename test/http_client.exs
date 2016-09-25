@@ -10,4 +10,14 @@ defmodule Grapple.Test.HttpClient do
     {:ok, %{status_code: 200, body: %{}}}
   end
 
+  def post(_url, _headers, _body) do
+    {:ok, %{status_code: 200, body: %{}}}
+  end
+  def put(_url, _headers, _body) do
+    {:ok, %{status_code: 200, body: %{}}}
+  end
+  def delete(_url, _headers) do
+    {:ok, %{status_code: 200, body: %{}}}
+  end
+
 end
