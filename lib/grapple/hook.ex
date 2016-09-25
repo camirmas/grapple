@@ -134,11 +134,7 @@ defmodule Grapple.Hook do
   @doc """
   Messages a subscriber webhook with the latest updates via HTTP
   """
-  defp notify(webhook, body) when is_nil(body) do
-    _notify(webhook, body)
-    |> handle_response
-  end
-  defp notify(webhook, body) when is_map(body) do
+  defp notify(webhook, body) do
     _notify(webhook, body)
     |> handle_response
   end
@@ -170,6 +166,9 @@ defmodule Grapple.Hook do
 
   # Macros
 
+  @doc """
+  Allows modules to `use` Grapple.Hook in them
+  """
   defmacro __using__(_opts) do
     quote do
       import Grapple.Hook
