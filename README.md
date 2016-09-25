@@ -1,5 +1,5 @@
 # Grapple
-> Webhook magic in Elixir
+> :green_apple: Webhook magic in Elixir
 
 [![CircleCI](https://circleci.com/gh/camirmas/grapple/tree/master.svg?style=shield)](https://circleci.com/gh/camirmas/grapple/tree/master)
 
@@ -43,7 +43,8 @@ hook = %Grapple.Hook{topic: "pokemon", url: "http://pokeapi.co/api/v2/pokemon/14
 {topic, ref} = Grapple.Hook.subscribe(hook)
 ```
 
-To broadcast a webhook, pass a `topic` to `broadast`. This will trigger HTTP requests for any stored hooks whose `topic` values match the given `topic`, and return the parsed responses.
+To broadcast a webhook, pass a `topic` to `broadast` arbitrary `data`. 
+This will trigger HTTP requests for any stored hooks whose `topic` values match the given `topic`, and return the parsed responses.
 ```elixir
-Grapple.Hook.broadcast(topic)
+Grapple.Hook.broadcast(topic, data)
 ```
