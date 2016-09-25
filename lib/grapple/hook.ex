@@ -178,16 +178,14 @@ defmodule Grapple.Hook do
   @doc """
   Provides a unique topic based on an arbitrary name and the lexical module
   """
-  def topicof(name) do
-    "#{__MODULE__}.#{name}"
-  end
+  def topicof(name) do: "#{__MODULE__}.#{name}"
 
   @doc """
   Allows users to define hookable functions that automatically publish
   to subscribers whenever they are invoked
   """
   defmacro defhook(name, do: block) do
-    id = name |> Macro.to_string
+    id = Macro.to_string name
 
     quote do
       def unquote(name) do
