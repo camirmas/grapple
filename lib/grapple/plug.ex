@@ -1,13 +1,17 @@
 defmodule Grapple.Plug do
   alias Grapple.Hook
+  import Plug.Conn
 
   def init(opts) do
-    Keyword.fetch! opts, :topic
+    topic = Keyword.fetch! opts, :topic
+    body = Keyword.get(opts, :body)
+
+    {topic, body}
   end
 
-  # TODO: need to revisit
-  def call(conn, topic, body) do
+  def call(conn, {topic, body}) do
     resp = Hook.broadcast topic, body
-    conn
+
+    assign(conn, :hook_responses, resp)
   end
 end
