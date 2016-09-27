@@ -114,8 +114,6 @@ defmodule Grapple.Hook do
       |> Enum.filter(&(&1.topic == topic))
       |> Enum.map(fn webhook -> notify(webhook, body) end)
 
-    # TODO: Create a logging service for response info
-
     {:reply, resp_log, {webhooks, stash_pid}}
   end
 
@@ -198,6 +196,7 @@ defmodule Grapple.Hook do
   Allows users to define hookable functions that automatically publish
   to subscribers whenever they are invoked
   """
+  # TODO: Need logging service, no way to check results of hook sending.
   defmacro defhook(name, do: block) do
     id = Macro.to_string name
 
