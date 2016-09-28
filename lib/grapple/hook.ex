@@ -46,6 +46,13 @@ defmodule Grapple.Hook do
   end
 
   @doc """
+  Returns all topics.
+  """
+  def get_topics do
+    GenServer.call __MODULE__, :get_topics
+  end
+
+  @doc """
   Executes an HTTP request for every Webhook of the
   specified topic.
   """
@@ -100,6 +107,13 @@ defmodule Grapple.Hook do
 
   def handle_call(:get_webhooks, _from, state = {webhooks, _stash_pid}) do
     {:reply, webhooks, state}
+  end
+
+  def handle_call(:get_topics, _from, state = {webhooks, _status_pid}) do
+    topics = webhooks
+      |> Enum.map(&(&1.topic))
+
+    {:reply, topics, state}
   end
 
   def handle_call({:broadcast, topic}, _from, {webhooks, stash_pid}) do
