@@ -22,6 +22,13 @@ defmodule GrappleTest do
       assert ref == returned_hook.ref
     end
 
+    test "can get topics", %{hook: hook} do
+      Hook.subscribe hook
+      [topic] = Hook.get_topics
+
+      assert topic == "stuff"
+    end
+
     test "can remove a specified hook by ref", %{hook: hook} do
       {_topic, ref} = Hook.subscribe hook
       Hook.remove_webhook(ref)
