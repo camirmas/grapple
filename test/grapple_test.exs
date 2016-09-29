@@ -1,9 +1,10 @@
 defmodule GrappleTest do
   use ExUnit.Case, async: true
-  alias Grapple.Hook
+  alias Grapple.{Hook, Logger}
 
   setup do
     Hook.clear_webhooks
+    Logger.clear_logs
 
     [hook: %Hook{topic: "stuff", url: "elixir-lang.org"}]
   end
@@ -53,7 +54,7 @@ defmodule GrappleTest do
 
     test "sends a successful hook", %{hook: hook} do
       Hook.subscribe hook
-      [resp] = Hook.broadcast hook.topic
+      [%{response: resp}] = Hook.broadcast hook.topic
 
       assert {:success, body: _body} = resp
     end
@@ -62,7 +63,7 @@ defmodule GrappleTest do
       hook = Map.put(hook, :url, "NOT_FOUND")
       Hook.subscribe hook
 
-      [resp] = Hook.broadcast hook.topic
+      [%{response: resp}] = Hook.broadcast hook.topic
 
       assert resp == :not_found
     end
@@ -71,7 +72,7 @@ defmodule GrappleTest do
       hook = Map.put(hook, :url, "ERROR")
       Hook.subscribe hook
 
-      [resp] = Hook.broadcast hook.topic
+      [%{response: resp}] = Hook.broadcast hook.topic
 
       assert {:error, reason: _} = resp
     end
