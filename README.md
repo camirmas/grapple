@@ -37,9 +37,9 @@ https://hexdocs.pm/grapple/0.1.0
 
 ---
 
-### Usage
+## Usage
 
-## Direct
+### Direct
 
 The default struct, `%Grapple.Hook{}`, has the following fields: `topic`, `url`, `owner`, `life`, `ref`, `method`, `headers`, `body`, and `query`. Note that `topic` and `url` are **required**. _TODO: make this configurable._
 
@@ -71,7 +71,7 @@ Responses will take one of the following forms:
 {:error, reason: reason} = response
 ```
 
-## Macro
+### Macro
 
 Broadcasting can also be done via a macro, `defhook`.
 
@@ -95,7 +95,7 @@ defmodule Pokemon do
 end
 ```
 
-## Plug
+### Plug
 
 Finally, broadcasting can be done with `Grapple.Plug`. Here's an example from a Phoenix Controller:
 
