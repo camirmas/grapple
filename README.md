@@ -4,6 +4,7 @@
 [![CircleCI](https://circleci.com/gh/camirmas/grapple/tree/master.svg?style=shield)](https://circleci.com/gh/camirmas/grapple/tree/master)
 
 Grapple defines a simple API for hookable actions that broadcast updates to subscribers over HTTP.
+
 This API lends itself nicely to Webhooks, REST Hooks, Server Push, and more!
 
 ## Installation
@@ -78,7 +79,7 @@ It defines a method in the lexical module. When invoked, the method's name will 
 
 The result will be broadcasted as the `body` to any hook requests on that topic, unless it returns `nil`, in which case hooks will be sent with default `body`.
 
-The following example implements a hook that will reacts to updates to Dragonite, performing a `POST` by default:
+The following example implements a hook that creates a game profile for Dragonite (Nature, Types, Stats, etc.), automatically sending updates to the `http://pokeapi.co` API:
 
 ```elixir
 hook = %Grapple.Hook{topic: "Pokemon.dragonite", url: "http://pokeapi.co/api/v2/pokemon/149"}
@@ -88,7 +89,7 @@ defmodule Pokemon do
 
   # in this case, no body needed
   defhook dragonite do
-    # add some logic (like create a Dragonite) and return a body or return nil
+    # add some logic (like define Dragonite's profile) and return a body or return nil
     nil
   end
 end
