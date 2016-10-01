@@ -4,6 +4,7 @@ defmodule Grapple.Logger do
   responses.
   """
   use GenServer
+  use Timex
 
   alias Grapple.Hook
 
@@ -56,7 +57,7 @@ defmodule Grapple.Logger do
   end
 
   def handle_call({:add_log, {response, hook}}, _from, logs) do
-    log = [%{hook: hook, response: response}]
+    log = [%{hook: hook, response: response, timestamp: Timex.now}]
 
     {:reply, response, logs ++ log}
   end
