@@ -95,6 +95,11 @@ defmodule Pokemon do
 end
 ```
 
+You should ensure that your hook method doesn't get called excessively, as it's highly unlikely that subscribers will want to be repeatedly hit. This certainly depends
+on your own unique needs, but it's good to keep this fact in mind.
+
+Work is currently being done to ensure that redundant broadcasts are not sent and that the individual subscription broadcasts are parallelized.
+
 ### Plug
 
 Finally, broadcasting can be done with `Grapple.Plug`. Here's an example from a Phoenix Controller:
