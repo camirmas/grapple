@@ -6,6 +6,8 @@ defmodule Grapple.Hook do
   """
   use GenServer
 
+  alias Grapple.Logger
+
   @http Application.get_env(:grapple, :http)
 
   # TODO: should probably make this configurable for users
@@ -45,8 +47,15 @@ defmodule Grapple.Hook do
   end
 
   @doc """
+  Returns all topics.
+  """
+  def get_topics do
+    GenServer.call __MODULE__, :get_topics
+  end
+
+  @doc """
   Executes an HTTP request for every Webhook of the
-  specified topic.
+  specified topic, and returns the current logs.
   """
   def broadcast(topic) do
     GenServer.call __MODULE__, {:broadcast, topic}
@@ -101,12 +110,19 @@ defmodule Grapple.Hook do
     {:reply, webhooks, state}
   end
 
-  def handle_call({:broadcast, topic}, _from, {webhooks, stash_pid}) do
-    resp_log = webhooks
-      |> Enum.filter(&(&1.topic == topic))
-      |> Enum.map(fn webhook -> notify(webhook, webhook.body) end)
+  def handle_call(:get_topics, _from, state = {webhooks, _status_pid}) do
+    topics = webhooks
+      |> Enum.map(&(&1.topic))
 
-    {:reply, resp_log, {webhooks, stash_pid}}
+    {:reply, topics, state}
+  end
+
+  def handle_call({:broadcast, topic}, _from, {webhooks, stash_pid}) do
+    webhooks
+    |> Enum.filter(&(&1.topic == topic))
+    |> Enum.map(fn webhook -> notify(webhook, webhook.body) end)
+
+    {:reply, Logger.get_logs, {webhooks, stash_pid}}
   end
 
   def handle_call({:broadcast, {topic, body}}, _from, {webhooks, stash_pid}) do
@@ -149,6 +165,7 @@ defmodule Grapple.Hook do
   defp notify(webhook, body) do
     _notify(webhook, body)
     |> handle_response
+    |> Logger.add_log(webhook)
   end
 
   defp _notify(webhook = %Grapple.Hook{method: "GET"}, _body) do
