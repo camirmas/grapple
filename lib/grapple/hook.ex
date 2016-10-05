@@ -5,6 +5,7 @@ defmodule Grapple.Hook do
   for defining hooks.
   """
   use GenServer
+  alias Experimental.Flow, as: Flow
 
   @http Application.get_env(:grapple, :http)
 
