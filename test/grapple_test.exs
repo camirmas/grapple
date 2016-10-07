@@ -60,6 +60,15 @@ defmodule GrappleTest do
       assert resp == :not_found
     end
 
+    # test "sends a hook with a body", %{hook: hook} do
+    #   hook = Map.put(hook, :body, "works")
+    #   Hook.subscribe hook
+
+    #   [resp] = Hook.broadcast(hook.topic, hook.body)
+
+    #   assert {:success, body: _body} = resp
+    # end
+
     test "sends a hook and gets an error", %{hook: hook} do
       hook = Map.put(hook, :url, "ERROR")
       Hook.subscribe hook

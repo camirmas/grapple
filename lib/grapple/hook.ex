@@ -105,15 +105,20 @@ defmodule Grapple.Hook do
   def handle_call({:broadcast, topic}, _from, {webhooks, stash_pid}) do
     resp_log = webhooks
       |> Enum.filter(&(&1.topic == topic))
-      |> Enum.map(fn webhook -> notify(webhook, webhook.body) end)
+      |> Flow.from_enumerable()
+      |> Flow.map(fn webhook -> notify(webhook, webhook.body) end)
+      |> Enum.to_list()
 
     {:reply, resp_log, {webhooks, stash_pid}}
   end
 
+  # TODO: integrate Flow!
   def handle_call({:broadcast, {topic, body}}, _from, {webhooks, stash_pid}) do
     resp_log = webhooks
       |> Enum.filter(&(&1.topic == topic))
-      |> Enum.map(fn webhook -> notify(webhook, body) end)
+      |> Flow.from_enumerable()
+      |> Flow.map(fn webhook -> notify(webhook, body) end)
+      |> Enum.to_list()
 
     {:reply, resp_log, {webhooks, stash_pid}}
   end
