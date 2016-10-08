@@ -55,7 +55,7 @@ defmodule Grapple.Hook do
     GenServer.call __MODULE__, {:broadcast, topic}
   end
   def broadcast(topic, body) do
-    GenServer.call __MODULE__, {:broadcast, {topic, body}}
+    GenServer.call __MODULE__, {:broadcast, topic, body}
   end
 
   @doc """
@@ -102,19 +102,19 @@ defmodule Grapple.Hook do
   end
 
   def handle_call({:broadcast, topic}, _from, {webhooks, stash_pid}) do
-    resp_log = webhooks
+    responses = webhooks
       |> Enum.filter(&(&1.topic == topic))
       |> Enum.map(fn webhook -> notify(webhook, webhook.body) end)
 
-    {:reply, resp_log, {webhooks, stash_pid}}
+    {:reply, responses, {webhooks, stash_pid}}
   end
 
-  def handle_call({:broadcast, {topic, body}}, _from, {webhooks, stash_pid}) do
-    resp_log = webhooks
+  def handle_call({:broadcast, topic, body}, _from, {webhooks, stash_pid}) do
+    responses = webhooks
       |> Enum.filter(&(&1.topic == topic))
       |> Enum.map(fn webhook -> notify(webhook, body) end)
 
-    {:reply, resp_log, {webhooks, stash_pid}}
+    {:reply, responses, {webhooks, stash_pid}}
   end
 
   def handle_cast({:remove_webhook, ref}, {webhooks, stash_pid}) do
