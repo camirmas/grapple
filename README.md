@@ -105,7 +105,9 @@ defmodule Pokemon do
 
   # add some logic (like define Dragonite's profile) and return a body or return nil
   defhook dragonite do
-    %{name: :dragonite, nature: :adamant, ivs: %{health: 32, speed: 32, attack: 32, defense: 32, speca: 32, specd: 32}}
+    %{ name: :dragonite,
+       abilities: [:multiscale, :focus],
+       stats: %{health: 32, speed: 30, attack: 32, defense: 31, speca: 24, specd: 30} }
   end
 end
 ```
