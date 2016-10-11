@@ -5,6 +5,7 @@ defmodule Grapple.Hook do
   for defining hooks.
   """
   use GenServer
+  alias Experimental.Flow, as: Flow
 
   @http Application.get_env(:grapple, :http)
 
@@ -104,7 +105,9 @@ defmodule Grapple.Hook do
   def handle_call({:broadcast, topic}, _from, {webhooks, stash_pid}) do
     responses = webhooks
       |> Enum.filter(&(&1.topic == topic))
-      |> Enum.map(fn webhook -> notify(webhook, webhook.body) end)
+      |> Flow.from_enumerable()
+      |> Flow.map(fn webhook -> notify(webhook, webhook.body) end)
+      |> Enum.to_list()
 
     {:reply, responses, {webhooks, stash_pid}}
   end
@@ -112,7 +115,9 @@ defmodule Grapple.Hook do
   def handle_call({:broadcast, topic, body}, _from, {webhooks, stash_pid}) do
     responses = webhooks
       |> Enum.filter(&(&1.topic == topic))
-      |> Enum.map(fn webhook -> notify(webhook, body) end)
+      |> Flow.from_enumerable()
+      |> Flow.map(fn webhook -> notify(webhook, body) end)
+      |> Enum.to_list()
 
     {:reply, responses, {webhooks, stash_pid}}
   end

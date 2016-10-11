@@ -32,7 +32,7 @@ defmodule Grapple.Mixfile do
   # Type "mix help compile.app" for more information
   def application do
     [
-      applications: [:httpoison, :logger, :plug,],
+      applications: [:httpoison, :logger, :plug, :gen_stage],
       mod: {Grapple, []},
     ]
   end
@@ -52,6 +52,7 @@ defmodule Grapple.Mixfile do
       {:httpoison, "~> 0.9.0"},
       {:uuid, "~> 1.1"},
       {:plug, "~> 1.2.0"},
+      {:gen_stage, "~> 0.4"},
       {:ex_doc, "~> 0.13", only: :dev},
     ]
   end
