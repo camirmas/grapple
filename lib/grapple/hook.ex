@@ -87,7 +87,7 @@ defmodule Grapple.Hook do
   Clears out all webhooks from the stash.
   """
   def clear_webhooks do
-    GenServer.cast __MODULE__, :clear_webhooks
+    GenServer.call __MODULE__, :clear_webhooks
   end
 
   # Callbacks
@@ -150,8 +150,8 @@ defmodule Grapple.Hook do
     {:noreply, {webhooks, stash_pid}}
   end
 
-  def handle_cast(:clear_webhooks, {_webhooks, stash_pid}) do
-    {:noreply, {[], stash_pid}}
+  def handle_call(:clear_webhooks, _from, {_webhooks, stash_pid}) do
+    {:reply, :ok, {[], stash_pid}}
   end
 
   @doc """

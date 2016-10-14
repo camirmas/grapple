@@ -40,7 +40,7 @@ defmodule Grapple.Logger do
   Clears logs.
   """
   def clear_logs do
-    GenServer.cast __MODULE__, :clear_logs
+    GenServer.call __MODULE__, :clear_logs
   end
 
   # Callbacks
@@ -62,8 +62,8 @@ defmodule Grapple.Logger do
     {:reply, response, logs ++ log}
   end
 
-  def handle_cast(:clear_logs, _logs) do
-    {:noreply, []}
+  def handle_call(:clear_logs, _from, _logs) do
+    {:reply, :ok, []}
   end
 
 end
