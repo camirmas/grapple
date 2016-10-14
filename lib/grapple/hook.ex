@@ -94,7 +94,7 @@ defmodule Grapple.Hook do
 
   @doc false
   def init(stash_pid) do
-    webhooks = Grapple.Stash.get_hooks stash_pid
+    webhooks = Grapple.HookServer.get_hooks stash_pid
     {:ok, {webhooks, stash_pid}}
   end
 
@@ -159,7 +159,7 @@ defmodule Grapple.Hook do
   save the current state in the stash.
   """
   def terminate(_reason, {webhooks, stash_pid}) do
-    Grapple.Stash.save_hooks stash_pid, webhooks
+    Grapple.HookServer.save_hooks stash_pid, webhooks
   end
 
   # Helpers
