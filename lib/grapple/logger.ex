@@ -8,10 +8,10 @@ defmodule Grapple.Logger do
 
   alias Grapple.Hook
 
-  # GenServer API
+  # API
 
-  def start_link(responses) do
-    GenServer.start_link __MODULE__, responses, name: __MODULE__
+  def start_link(server_pid) do
+    GenServer.start_link __MODULE__, server_pid, name: __MODULE__
   end
 
   @doc """
@@ -44,26 +44,31 @@ defmodule Grapple.Logger do
   end
 
   # Callbacks
-
-  def handle_call(:get_logs, _from, logs) do
-    {:reply, logs, logs}
+  
+  def init(server_pid) do
+    logs = Grapple.LoggerServer.get_logs server_pid
+    {:ok, {logs, server_pid}}
   end
 
-  def handle_call({:get_logs, {key, val}}, _from, logs) do
+  def handle_call(:get_logs, _from, state = {logs, _server_pid}) do
+    {:reply, logs, state}
+  end
+
+  def handle_call({:get_logs, {key, val}}, _from, state = {logs, _server_pid}) do
     filtered_logs = logs
       |> Enum.filter(&(Map.get(&1.hook, key) == val))
 
-    {:reply, filtered_logs, logs}
+    {:reply, filtered_logs, state}
   end
 
-  def handle_call({:add_log, {response, hook}}, _from, logs) do
+  def handle_call({:add_log, {response, hook}}, _from, {logs, server_pid}) do
     log = [%{hook: hook, response: response, timestamp: Timex.now}]
 
-    {:reply, response, logs ++ log}
+    {:reply, response, {logs ++ log, server_pid}}
   end
 
-  def handle_call(:clear_logs, _from, _logs) do
-    {:reply, :ok, []}
+  def handle_call(:clear_logs, _from, {_logs, server_pid}) do
+    {:reply, :ok, {[], server_pid}}
   end
 
 end
