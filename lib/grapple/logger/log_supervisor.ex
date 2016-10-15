@@ -1,4 +1,4 @@
-defmodule Grapple.LoggerSupervisor do
+defmodule Grapple.Logger.LogSupervisor do
   @moduledoc false
 
   use Supervisor

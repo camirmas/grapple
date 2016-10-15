@@ -8,6 +8,7 @@ defmodule Grapple.Hook do
   alias Experimental.Flow, as: Flow
 
   alias Grapple.Logger
+  alias Grapple.Hook.HookServer
 
   @http Application.get_env(:grapple, :http)
 
@@ -69,6 +70,14 @@ defmodule Grapple.Hook do
   end
 
   @doc """
+  Clears out all webhooks from the stash.
+  """
+  def clear_webhooks do
+    GenServer.call __MODULE__, :clear_webhooks
+  end
+
+
+  @doc """
   Removes a single webhook by reference.
   """
   def remove_webhook(ref) when is_reference(ref) do
@@ -83,20 +92,22 @@ defmodule Grapple.Hook do
     GenServer.cast __MODULE__, {:remove_topic, topic}
   end
 
-  @doc """
-  Clears out all webhooks from the stash.
-  """
-  def clear_webhooks do
-    GenServer.call __MODULE__, :clear_webhooks
-  end
-
   # Callbacks
 
   @doc false
   def init(stash_pid) do
-    webhooks = Grapple.HookServer.get_hooks stash_pid
+    webhooks = HookServer.get_hooks stash_pid
     {:ok, {webhooks, stash_pid}}
   end
+
+  @doc """
+  If the server is about to exit (i.e. crashing),
+  save the current state in the stash.
+  """
+  def terminate(_reason, {webhooks, stash_pid}) do
+    HookServer.save_hooks stash_pid, webhooks
+  end
+
 
   def handle_call({:subscribe, webhook}, _from, state = {webhooks, stash_pid}) do
     if webhook in webhooks do
@@ -119,7 +130,7 @@ defmodule Grapple.Hook do
   end
 
   def handle_call({:broadcast, topic}, _from, {webhooks, stash_pid}) do
-    responses = webhooks
+    webhooks
       |> Enum.filter(&(&1.topic == topic))
       |> Flow.from_enumerable()
       |> Flow.map(fn webhook -> notify(webhook, webhook.body) end)
@@ -138,6 +149,10 @@ defmodule Grapple.Hook do
     {:reply, responses, {webhooks, stash_pid}}
   end
 
+  def handle_call(:clear_webhooks, _from, {_webhooks, stash_pid}) do
+    {:reply, :ok, {[], stash_pid}}
+  end
+
   def handle_cast({:remove_webhook, ref}, {webhooks, stash_pid}) do
     webhooks = webhooks
       |> Enum.reject(&(&1.ref == ref))
@@ -148,18 +163,6 @@ defmodule Grapple.Hook do
     webhooks = webhooks
       |> Enum.reject(&(&1.topic == topic))
     {:noreply, {webhooks, stash_pid}}
-  end
-
-  def handle_call(:clear_webhooks, _from, {_webhooks, stash_pid}) do
-    {:reply, :ok, {[], stash_pid}}
-  end
-
-  @doc """
-  If the server is about to exit (i.e. crashing),
-  save the current state in the stash.
-  """
-  def terminate(_reason, {webhooks, stash_pid}) do
-    Grapple.HookServer.save_hooks stash_pid, webhooks
   end
 
   # Helpers

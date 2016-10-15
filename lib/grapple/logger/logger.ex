@@ -7,6 +7,7 @@ defmodule Grapple.Logger do
   use Timex
 
   alias Grapple.Hook
+  alias Grapple.Logger.LogServer
 
   # API
 
@@ -46,8 +47,12 @@ defmodule Grapple.Logger do
   # Callbacks
   
   def init(server_pid) do
-    logs = Grapple.LoggerServer.get_logs server_pid
+    logs = LogServer.get_logs server_pid
     {:ok, {logs, server_pid}}
+  end
+
+  def terminate(_reason, {logs, server_pid}) do
+    LogServer.save_logs server_pid, logs
   end
 
   def handle_call(:get_logs, _from, state = {logs, _server_pid}) do
