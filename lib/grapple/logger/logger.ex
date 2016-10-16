@@ -7,7 +7,7 @@ defmodule Grapple.Logger do
   use Timex
 
   alias Grapple.Hook
-  alias Grapple.Logger.LogServer
+  alias Grapple.Logger.Server, as: LogServer
 
   # API
 

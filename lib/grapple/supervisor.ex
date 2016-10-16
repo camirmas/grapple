@@ -10,8 +10,8 @@ defmodule Grapple.Supervisor do
   end
 
   def start_workers(sup, webhooks) do
-    {:ok, hook_server} = Supervisor.start_child(sup, worker(Grapple.Hook.HookServer, [webhooks]))
-    {:ok, logger_server} = Supervisor.start_child(sup, worker(Grapple.Logger.LogServer, [[]]))
+    {:ok, hook_server} = Supervisor.start_child(sup, worker(Grapple.Hook.Server, [webhooks]))
+    {:ok, logger_server} = Supervisor.start_child(sup, worker(Grapple.Logger.Server, [[]]))
     Supervisor.start_child(sup, supervisor(Grapple.Logger.LogSupervisor, [logger_server]))
     Supervisor.start_child(sup, supervisor(Grapple.Hook.HookSupervisor, [hook_server]))
   end

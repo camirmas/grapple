@@ -8,7 +8,7 @@ defmodule Grapple.Hook do
   alias Experimental.Flow, as: Flow
 
   alias Grapple.Logger
-  alias Grapple.Hook.HookServer
+  alias Grapple.Hook.Server, as: HookServer
 
   @http Application.get_env(:grapple, :http)
 

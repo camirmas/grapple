@@ -1,4 +1,4 @@
-defmodule Grapple.Logger.LogServer do
+defmodule Grapple.Logger.Server do
   @moduledoc false
 
   use GenServer
