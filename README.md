@@ -78,13 +78,13 @@ This will trigger HTTP requests for any stored hooks (and their subscribers) who
 Responses will take one of the following forms:
 ```elixir
 # on success
-{:success, body: body} = response
+%{hook: hook, response: {:success, body: body}, timestamp: timestamp} = response
 
 # on 404
 :not_found = response
 
 # on error
-{:error, reason: reason} = response
+%{hook: hook, response: {:error, reason: reason}, timestamp: timestamp} = response
 ```
 
 ### Macro
