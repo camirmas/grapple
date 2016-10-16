@@ -43,7 +43,7 @@ https://hexdocs.pm/grapple/0.2.0
 The default struct, `%Grapple.Hook{}`, has the following fields:
 
 - `topic`
-- `url`,
+- `url`
 - `owner`
 - `life`
 - `ref`
@@ -52,7 +52,7 @@ The default struct, `%Grapple.Hook{}`, has the following fields:
 - `body`
 - `query`
 
-Note that `topic` and `url` are **required**. _TODO: make this configurable._
+Note that `topic` and `url` are **required**. This will soon be available as an environment configuration setting.
 
 **Subscribing**
 
@@ -91,7 +91,7 @@ Responses will take one of the following forms:
 
 Broadcasting can also be done via a macro, `defhook`.
 
-The macro defines a named method in the lexical module. When invoked, the method's name will be used in the topic (takes the form "#{__MODULE__}.#{name}").
+The macro defines a named method in the lexical module. When invoked, the method's name will be used in the topic (takes the form `#{__MODULE__}.#{name}`).
 
 The result will be broadcasted as the `body` to any hook requests on that topic, unless it returns `nil`, in which case hooks will be sent with default `body`.
 
