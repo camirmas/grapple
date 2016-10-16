@@ -7,6 +7,8 @@ defmodule Grapple.Hook do
   use GenServer
   alias Experimental.Flow, as: Flow
 
+  alias Grapple.Logger
+
   @http Application.get_env(:grapple, :http)
 
   # TODO: should probably make this configurable for users
@@ -46,8 +48,15 @@ defmodule Grapple.Hook do
   end
 
   @doc """
+  Returns all topics.
+  """
+  def get_topics do
+    GenServer.call __MODULE__, :get_topics
+  end
+
+  @doc """
   Executes an HTTP request for every Webhook of the
-  specified topic.
+  specified topic, and returns the current logs.
   """
   def broadcast(topic) do
     GenServer.call __MODULE__, {:broadcast, topic}
@@ -78,14 +87,14 @@ defmodule Grapple.Hook do
   Clears out all webhooks from the stash.
   """
   def clear_webhooks do
-    GenServer.cast __MODULE__, :clear_webhooks
+    GenServer.call __MODULE__, :clear_webhooks
   end
 
   # Callbacks
 
   @doc false
   def init(stash_pid) do
-    webhooks = Grapple.Stash.get_hooks stash_pid
+    webhooks = Grapple.HookServer.get_hooks stash_pid
     {:ok, {webhooks, stash_pid}}
   end
 
@@ -102,6 +111,13 @@ defmodule Grapple.Hook do
     {:reply, webhooks, state}
   end
 
+  def handle_call(:get_topics, _from, state = {webhooks, _status_pid}) do
+    topics = webhooks
+      |> Enum.map(&(&1.topic))
+
+    {:reply, topics, state}
+  end
+
   def handle_call({:broadcast, topic}, _from, {webhooks, stash_pid}) do
     responses = webhooks
       |> Enum.filter(&(&1.topic == topic))
@@ -109,7 +125,7 @@ defmodule Grapple.Hook do
       |> Flow.map(fn webhook -> notify(webhook, webhook.body) end)
       |> Enum.to_list()
 
-    {:reply, responses, {webhooks, stash_pid}}
+    {:reply, Logger.get_logs, {webhooks, stash_pid}}
   end
 
   def handle_call({:broadcast, topic, body}, _from, {webhooks, stash_pid}) do
@@ -134,8 +150,8 @@ defmodule Grapple.Hook do
     {:noreply, {webhooks, stash_pid}}
   end
 
-  def handle_cast(:clear_webhooks, {_webhooks, stash_pid}) do
-    {:noreply, {[], stash_pid}}
+  def handle_call(:clear_webhooks, _from, {_webhooks, stash_pid}) do
+    {:reply, :ok, {[], stash_pid}}
   end
 
   @doc """
@@ -143,7 +159,7 @@ defmodule Grapple.Hook do
   save the current state in the stash.
   """
   def terminate(_reason, {webhooks, stash_pid}) do
-    Grapple.Stash.save_hooks stash_pid, webhooks
+    Grapple.HookServer.save_hooks stash_pid, webhooks
   end
 
   # Helpers
@@ -154,6 +170,7 @@ defmodule Grapple.Hook do
   defp notify(webhook, body) do
     _notify(webhook, body)
     |> handle_response
+    |> Logger.add_log(webhook)
   end
 
   defp _notify(webhook = %Grapple.Hook{method: "GET"}, _body) do

@@ -1,4 +1,4 @@
-defmodule Grapple.Stash do
+defmodule Grapple.HookServer do
   @moduledoc false
 
   use GenServer
