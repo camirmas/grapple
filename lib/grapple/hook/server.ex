@@ -1,4 +1,4 @@
-defmodule Grapple.HookServer do
+defmodule Grapple.Hook.Server do
   @moduledoc false
 
   use GenServer

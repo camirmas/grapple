@@ -1,4 +1,4 @@
-defmodule Grapple.HookSupervisor do
+defmodule Grapple.Hook.HookSupervisor do
   @moduledoc false
 
   use Supervisor
