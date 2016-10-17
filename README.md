@@ -93,7 +93,7 @@ Broadcasting can also be done via a macro, `defhook`.
 
 The macro defines a named method in the lexical module. When invoked, the method's name will be used in the topic (takes the form `#{__MODULE__}.#{name}`).
 
-The result will be broadcasted as the `body` to any hook requests on that topic, unless it returns `nil`, in which case hooks will be sent with default `body`.
+The result will be broadcasted as the `body` to any hook requests on that topic, unless it returns `nil`, in which case hooks will be sent with the default `body`.
 
 The following example implements a hook that determines the game profile for Dragonite, automatically sending updates to the `http://pokeapi.co` API:
 
@@ -106,7 +106,7 @@ defmodule Pokemon do
   # add some logic (like define Dragonite's profile) and return a body or return nil
   defhook dragonite do
     %{ name: :dragonite,
-       abilities: [:multiscale, :focus],
+       abilities: [:multiscale, :innerfocus],
        stats: %{health: 32, speed: 30, attack: 32, defense: 31, speca: 24, specd: 30} }
   end
 end
@@ -114,7 +114,7 @@ end
 
 You should try to ensure that your hook method doesn't get called excessively since it's highly unlikely that subscribers will want to be repeatedly hit. This certainly depends on your own unique needs, but it's good to keep this fact in mind.
 
-Work is currently being done to ensure that redundant broadcasts are not sent and that the individual subscription broadcasts are parallelized.
+Broadcasts are automatically parallelized vertically via `Experimantal.Flow`. More refined horizontal parallelization can be achieved via OTP and is controlled by the user.
 
 ### Plug
 
