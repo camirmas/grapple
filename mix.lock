@@ -2,7 +2,7 @@
   "combine": {:hex, :combine, "0.9.2", "cd3c8721f378ebe032487d8a4fa2ced3181a456a3c21b16464da8c46904bb552", [:mix], []},
   "earmark": {:hex, :earmark, "1.0.2", "a0b0904d74ecc14da8bd2e6e0248e1a409a2bc91aade75fcf428125603de3853", [:mix], []},
   "ex_doc": {:hex, :ex_doc, "0.14.3", "e61cec6cf9731d7d23d254266ab06ac1decbb7651c3d1568402ec535d387b6f7", [:mix], [{:earmark, "~> 1.0", [hex: :earmark, optional: false]}]},
-  "gen_stage": {:hex, :gen_stage, "0.6.1", "1e05e3faf9e505dcdb1e6d2da501fc5d1724e7ea6176bf72853ea78c8a600d1c", [:mix], []},
+  "gen_stage": {:hex, :gen_stage, "0.7.0", "d8ab7f294ca0fb7ca001c33a97d25876561f086ecd149689f43c0d2ffccf4fff", [:mix], []},
   "gettext": {:hex, :gettext, "0.11.0", "80c1dd42d270482418fa158ec5ba073d2980e3718bacad86f3d4ad71d5667679", [:mix], []},
   "graphql": {:hex, :graphql, "0.3.2", "0aa7a00948c456831f8fa1bb4ead3e4e15d145b8656902134d180d1369775dff", [:mix], []},
   "hackney": {:hex, :hackney, "1.6.1", "ddd22d42db2b50e6a155439c8811b8f6df61a4395de10509714ad2751c6da817", [:rebar3], [{:certifi, "0.4.0", [hex: :certifi, optional: false]}, {:idna, "1.2.0", [hex: :idna, optional: false]}, {:metrics, "1.0.1", [hex: :metrics, optional: false]}, {:mimerl, "1.0.2", [hex: :mimerl, optional: false]}, {:ssl_verify_fun, "1.1.0", [hex: :ssl_verify_fun, optional: false]}]},
