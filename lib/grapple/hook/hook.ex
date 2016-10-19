@@ -131,8 +131,8 @@ defmodule Grapple.Hook do
 
   def handle_call({:broadcast, topic}, _from, {webhooks, stash_pid}) do
     webhooks
-      |> Enum.filter(&(&1.topic == topic))
       |> Flow.from_enumerable()
+      |> Flow.filter(&(&1.topic == topic))
       |> Flow.map(fn webhook -> notify(webhook, webhook.body) end)
       |> Enum.to_list()
 
@@ -141,8 +141,8 @@ defmodule Grapple.Hook do
 
   def handle_call({:broadcast, topic, body}, _from, {webhooks, stash_pid}) do
     responses = webhooks
-      |> Enum.filter(&(&1.topic == topic))
       |> Flow.from_enumerable()
+      |> Flow.filter(&(&1.topic == topic))
       |> Flow.map(fn webhook -> notify(webhook, body) end)
       |> Enum.to_list()
 
