@@ -1,19 +1,18 @@
 defmodule Grapple.Hook do
   @moduledoc """
-  This module provides a GenServer that is primarily responsible for subscribing
-  to and broadcasting Webhooks. It also defines a `Hook` struct, and macros
+  This module provides a GenServer that is primarily responsible for 
+  broadcasting Webhooks. It also defines a `Hook` struct, and macros
   for defining hooks.
   """
   use GenServer
-  alias Experimental.Flow, as: Flow
+  alias Experimental.Flow
 
   alias Grapple.Logger
-  alias Grapple.Hook.Server, as: HookServer
+  alias Grapple.HookServer
 
   @http Application.get_env(:grapple, :http)
 
   # TODO: should probably make this configurable for users
-  @enforce_keys [:topic, :url]
   defstruct [
     :topic,
     :url,
@@ -29,16 +28,8 @@ defmodule Grapple.Hook do
   # API
 
   @doc false
-  def start_link(stash_pid) do
-    GenServer.start_link __MODULE__, stash_pid, name: __MODULE__
-  end
-
-  @doc """
-  Callback for subscribing a Webhook. Adds a unique ref,
-  adds to the list, and returns the topic name and unique ref of that Webhook.
-  """
-  def subscribe(webhook = %Grapple.Hook{}) do
-    GenServer.call __MODULE__, {:subscribe, webhook}
+  def start_link(hook) do
+    GenServer.start_link __MODULE__, hook
   end
 
   @doc """
@@ -46,13 +37,6 @@ defmodule Grapple.Hook do
   """
   def get_webhooks do
     GenServer.call __MODULE__, :get_webhooks
-  end
-
-  @doc """
-  Returns all topics.
-  """
-  def get_topics do
-    GenServer.call __MODULE__, :get_topics
   end
 
   @doc """
@@ -95,9 +79,8 @@ defmodule Grapple.Hook do
   # Callbacks
 
   @doc false
-  def init(stash_pid) do
-    webhooks = HookServer.get_hooks stash_pid
-    {:ok, {webhooks, stash_pid}}
+  def init(hook) do
+    {:ok, %{responses: [], hook: hook}}
   end
 
   @doc """

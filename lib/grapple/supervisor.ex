@@ -3,20 +3,20 @@ defmodule Grapple.Supervisor do
 
   use Supervisor
 
-  def start_link(webhooks) do
-    result = {:ok, sup} = Supervisor.start_link(__MODULE__, [webhooks])
-    start_workers(sup, webhooks)
+  def start_link(_) do
+    result = {:ok, sup} = Supervisor.start_link(__MODULE__, [])
+    start_workers(sup)
     result
   end
 
-  def start_workers(sup, webhooks) do
-    {:ok, hook_server} = Supervisor.start_child(sup, worker(Grapple.Hook.Server, [webhooks]))
-    {:ok, logger_server} = Supervisor.start_child(sup, worker(Grapple.Logger.Server, [[]]))
-    Supervisor.start_child(sup, supervisor(Grapple.Logger.LogSupervisor, [logger_server]))
-    Supervisor.start_child(sup, supervisor(Grapple.Hook.HookSupervisor, [hook_server]))
+  def start_workers(sup) do
+    {:ok, topics_sup} =
+      Supervisor.start_child(sup,
+                             supervisor(Grapple.TopicsSupervisor, [[]]))
+    Supervisor.start_child(sup, worker(Grapple.Server, [topics_sup]))
   end
 
   def init(_) do
-    supervise [], strategy: :one_for_one
+    supervise [], strategy: :one_for_all
   end
 end
