@@ -39,6 +39,22 @@ defmodule Grapple.Server do
     Grapple.HookServer.subscribe(topic, webhook)
   end
 
+  def broadcast(topic) do
+    Grapple.HookServer.broadcast(topic)
+  end
+
+  def get_hooks(topic) do
+    Grapple.HookServer.get_hooks(topic)
+  end
+
+  def get_responses(topic) do
+    Grapple.HookServer.get_responses(topic)
+  end
+
+  def remove_hook(topic, hook_pid) do
+    Grapple.HookServer.remove_hook(topic, hook_pid)
+  end
+
   # Callbacks
 
   def init(topics_sup) do
@@ -56,9 +72,9 @@ defmodule Grapple.Server do
         nil ->
           {:ok, sup} = Supervisor.start_child(topics_sup, [topic_name])
           new_topic = %Topic{sup: sup, name: topic_name}
-          {:reply, new_topic, %{state | topics: [new_topic | topics]}}
-        _ ->
-          {:reply, topics, state}
+          {:reply, {:ok, new_topic}, %{state | topics: [new_topic | topics]}}
+        topic ->
+          {:reply, {:ok, topic}, state}
       end
   end
 

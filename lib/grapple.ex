@@ -7,6 +7,8 @@ defmodule Grapple do
     Grapple.Supervisor.start_link []
   end
 
+  # Topics
+
   def add_topic(topic) when is_atom(topic) do
     Grapple.Server.add_topic(topic)
   end
@@ -23,7 +25,25 @@ defmodule Grapple do
     Grapple.Server.clear_topics
   end
 
-  def subscribe(topic, webhook = %Grapple.Hook{}) when is_atom(topic) do
+  # Hooks
+
+  def subscribe(topic, %Grapple.Hook{} = webhook) when is_atom(topic) do
     Grapple.Server.subscribe(topic, webhook)
+  end
+
+  def broadcast(topic) when is_atom(topic) do
+    Grapple.Server.broadcast(topic)
+  end
+
+  def get_hooks(topic) when is_atom(topic) do
+    Grapple.Server.get_hooks(topic)
+  end
+
+  def get_responses(topic) when is_atom(topic) do
+    Grapple.Server.get_responses(topic)
+  end
+
+  def remove_hook(topic, hook) when is_pid(hook) do
+    Grapple.Server.remove_hook(topic, hook)
   end
 end

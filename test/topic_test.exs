@@ -27,7 +27,7 @@ defmodule TopicTest do
     end
 
     test "can get all topics" do
-      {:ok, gyms}= Grapple.add_topic :gyms
+      {:ok, gyms} = Grapple.add_topic :gyms
       topics = Grapple.get_topics
 
       assert gyms in topics
