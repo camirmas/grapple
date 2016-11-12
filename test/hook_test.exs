@@ -35,6 +35,15 @@ defmodule HookTest do
       assert [{^pid, []}] = Grapple.get_responses(topic.name)
     end
 
+    test "if a hook goes down in an abnormal way, it should be removed", %{topic: topic} do
+      {:ok, pid} = Grapple.subscribe(topic.name, @hook)
+      ref = Process.monitor(pid)
+      Process.exit(pid, :kill)
+      assert_receive {:DOWN, ^ref, _, _, _}
+
+      assert [] = Grapple.get_hooks(topic.name)
+    end
+
     test "can broadcast hooks", %{topic: topic} do
       {:ok, pid} = Grapple.subscribe(topic.name, @hook)
 

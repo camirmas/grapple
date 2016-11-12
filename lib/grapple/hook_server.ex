@@ -40,15 +40,18 @@ defmodule Grapple.HookServer do
   # Callbacks
 
   def init(hook_sup) do
-    state = %{hook_pids: [], hook_sup: hook_sup}
+    state = %{hook_pids: [], hook_sup: hook_sup, monitors: []}
     {:ok, state}
   end
 
   def handle_call({:subscribe, webhook}, _from, %{hook_pids: hook_pids,
-    hook_sup: hook_sup} = state) do
+    hook_sup: hook_sup, monitors: monitors} = state) do
       {:ok, pid} = Supervisor.start_child(hook_sup, [webhook])
+      ref = Process.monitor(pid)
+      new_monitors = [{ref, pid} | monitors]
+      new_hook_pids = [pid | hook_pids]
       {:reply, {:ok, pid},
-        %{state | hook_pids: [pid | hook_pids]}}
+        %{state | hook_pids: new_hook_pids, monitors: new_monitors}}
   end
 
   def handle_call(:broadcast, _from, %{hook_pids: hook_pids} = state) do
@@ -92,4 +95,22 @@ defmodule Grapple.HookServer do
 
       {:noreply, %{state | hook_pids: new_hooks}}
   end
+
+  def handle_info({:DOWN, ref, _, pid, _}, %{hook_pids: hook_pids,
+    monitors: monitors} = state) do
+      case {ref, pid} in monitors do
+        true ->
+          new_monitors = List.delete(monitors, {ref, pid})
+          new_hooks = List.delete(hook_pids, pid)
+          new_state = %{state | hook_pids: new_hooks, monitors: new_monitors}
+          {:noreply, new_state}
+        _ ->
+          {:noreply, state}
+      end
+  end
+
+  def handle_info(msg, state) do
+    {:noreply, state}
+  end
+
 end
