@@ -5,13 +5,11 @@ defmodule Grapple.Hook do
   for defining hooks.
   """
   use GenServer
-  alias Experimental.Flow
-
-  alias Grapple.Logger
 
   @http Application.get_env(:grapple, :http)
 
   # TODO: should probably make this configurable for users
+  @enforce_keys [:url]
   defstruct [
     :url,
     :owner,
@@ -64,14 +62,6 @@ defmodule Grapple.Hook do
     {:ok, %{responses: [], hook: hook}}
   end
 
-  @doc """
-  If the server is about to exit (i.e. crashing),
-  save the current state in the stash.
-  """
-  def terminate(_reason, _state) do
-    #HookServer.save_hooks stash_pid, webhooks
-  end
-
   def handle_call(:get_hook, _from, %{hook: hook} = state) do
     {:reply, hook, state}
   end
@@ -80,24 +70,18 @@ defmodule Grapple.Hook do
     {:reply, responses, state}
   end
 
-  def handle_call({:broadcast, topic}, _from, {webhooks, stash_pid}) do
-    webhooks
-      |> Flow.from_enumerable()
-      |> Flow.filter(&(&1.topic == topic))
-      |> Flow.map(fn webhook -> notify(webhook, webhook.body) end)
-      |> Enum.to_list()
+  def handle_call(:broadcast, _from, %{hook: hook, responses: responses} = state) do
+    response = notify(hook, hook.body)
+    new_state = %{state | responses: [response | responses]}
 
-    {:reply, Logger.get_logs, {webhooks, stash_pid}}
+    {:reply, new_state, new_state}
   end
 
-  def handle_call({:broadcast, topic, body}, _from, {webhooks, stash_pid}) do
-    responses = webhooks
-      |> Flow.from_enumerable()
-      |> Flow.filter(&(&1.topic == topic))
-      |> Flow.map(fn webhook -> notify(webhook, body) end)
-      |> Enum.to_list()
+  def handle_call({:broadcast, body}, _from, %{hook: hook, responses: responses} = state) do
+    response = notify(hook, body)
+    new_state = %{state | responses: [response | responses]}
 
-    {:reply, responses, {webhooks, stash_pid}}
+    {:reply, new_state, new_state}
   end
 
   # Helpers
@@ -108,7 +92,6 @@ defmodule Grapple.Hook do
   defp notify(webhook, body) do
     _notify(webhook, body)
     |> handle_response
-    |> Logger.add_log(webhook)
   end
 
   defp _notify(webhook = %Grapple.Hook{method: "GET"}, _body) do
@@ -136,6 +119,8 @@ defmodule Grapple.Hook do
         :not_found
       {:error, %{reason: reason}} ->
         {:error, reason: reason}
+      {:ok, resp} ->
+        {:ok, resp}
     end
   end
 

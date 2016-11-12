@@ -35,6 +35,10 @@ defmodule Grapple do
     Grapple.Server.broadcast(topic)
   end
 
+  def broadcast(topic, body) when is_atom(topic) do
+    Grapple.Server.broadcast(topic, body)
+  end
+
   def get_hooks(topic) when is_atom(topic) do
     Grapple.Server.get_hooks(topic)
   end

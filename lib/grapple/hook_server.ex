@@ -1,12 +1,12 @@
 defmodule Grapple.HookServer do
   use GenServer
-
-  @backend Application.get_env(:grapple, :backend) || Grapple.Ets
+  alias Grapple.Hook
+  alias Experimental.Flow
 
   # API
 
   def start_link(topic, hook_sup) do
-    GenServer.start_link(__MODULE__, [topic, hook_sup], name: topic)
+    GenServer.start_link(__MODULE__, hook_sup, name: topic)
   end
 
   @doc """
@@ -19,6 +19,10 @@ defmodule Grapple.HookServer do
 
   def broadcast(topic) do
     GenServer.call(topic, :broadcast)
+  end
+
+  def broadcast(topic, body) do
+    GenServer.call(topic, {:broadcast, body})
   end
 
   def get_hooks(topic) do
@@ -35,22 +39,39 @@ defmodule Grapple.HookServer do
 
   # Callbacks
 
-  def init([topic, hook_sup]) do
-    {:ok, store_pid} = @backend.start_link(topic)
-    hook_pids = @backend.all(store_pid)
-    state = %{store_pid: store_pid, hook_pids: hook_pids, hook_sup: hook_sup}
+  def init(hook_sup) do
+    state = %{hook_pids: [], hook_sup: hook_sup}
     {:ok, state}
   end
 
   def handle_call({:subscribe, webhook}, _from, %{hook_pids: hook_pids,
     hook_sup: hook_sup} = state) do
       {:ok, pid} = Supervisor.start_child(hook_sup, [webhook])
-      {:reply, {:ok, pid}, %{state | hook_pids: [pid | hook_pids]}}
+      {:reply, {:ok, pid},
+        %{state | hook_pids: [pid | hook_pids]}}
+  end
+
+  def handle_call(:broadcast, _from, %{hook_pids: hook_pids} = state) do
+    hooks = hook_pids
+      |> Flow.from_enumerable()
+      |> Flow.map(fn hook_pid -> Hook.broadcast(hook_pid) end)
+      |> Enum.to_list()
+
+    {:reply, hooks, state}
+  end
+
+  def handle_call({:broadcast, body}, _from, %{hook_pids: hook_pids} = state) do
+    hooks = hook_pids
+      |> Flow.from_enumerable()
+      |> Flow.map(fn hook_pid -> Hook.broadcast(hook_pid, body) end)
+      |> Enum.to_list()
+
+    {:reply, hooks, state}
   end
 
   def handle_call(:get_hooks, _from, %{hook_pids: hook_pids} = state) do
     hooks = Enum.map(hook_pids, fn pid ->
-      {pid, Grapple.Hook.get_hook(pid)}
+      {pid, Hook.get_hook(pid)}
     end)
 
     {:reply, hooks, state}
@@ -58,7 +79,7 @@ defmodule Grapple.HookServer do
 
   def handle_call(:get_responses, _from, %{hook_pids: hook_pids} = state) do
     responses = Enum.map(hook_pids, fn pid ->
-      {pid, Grapple.Hook.get_responses(pid)}
+      {pid, Hook.get_responses(pid)}
     end)
 
     {:reply, responses, state}

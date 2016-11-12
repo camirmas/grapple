@@ -43,6 +43,10 @@ defmodule Grapple.Server do
     Grapple.HookServer.broadcast(topic)
   end
 
+  def broadcast(topic, body) do
+    Grapple.HookServer.broadcast(topic, body)
+  end
+
   def get_hooks(topic) do
     Grapple.HookServer.get_hooks(topic)
   end
