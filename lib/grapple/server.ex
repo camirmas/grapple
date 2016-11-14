@@ -1,4 +1,5 @@
 defmodule Grapple.Server do
+  @moduledoc false
   use GenServer
 
   @backend Application.get_env(:grapple, :backend) || Grapple.Ets
@@ -13,9 +14,6 @@ defmodule Grapple.Server do
     GenServer.start_link(__MODULE__, topics_sup, name: __MODULE__)
   end
 
-  @doc """
-  Adds a Topic, and returns the current list of topics.
-  """
   def add_topic(topic) do
     GenServer.call(__MODULE__, {:add_topic, topic})
   end
@@ -28,9 +26,6 @@ defmodule Grapple.Server do
     GenServer.call(__MODULE__, :clear_topics)
   end
 
-  @doc """
-  Returns all topics.
-  """
   def get_topics do
     GenServer.call(__MODULE__, :get_topics)
   end

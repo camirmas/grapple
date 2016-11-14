@@ -1,4 +1,5 @@
 defmodule Grapple.HookServer do
+  @moduledoc false
   use GenServer
   alias Grapple.Hook
   alias Experimental.Flow
@@ -9,20 +10,16 @@ defmodule Grapple.HookServer do
     GenServer.start_link(__MODULE__, hook_sup, name: topic)
   end
 
-  @doc """
-  Subscribes a Webhook on the given topic. Adds to the list, and returns the
-  pid of that Webhook.
-  """
   def subscribe(topic, webhook) do
     GenServer.call(topic, {:subscribe, webhook})
   end
 
   def broadcast(topic) do
-    GenServer.call(topic, :broadcast)
+    GenServer.call(topic, :broadcast, :infinity)
   end
 
   def broadcast(topic, body) do
-    GenServer.call(topic, {:broadcast, body})
+    GenServer.call(topic, {:broadcast, body}, :infinity)
   end
 
   def get_hooks(topic) do
@@ -54,6 +51,7 @@ defmodule Grapple.HookServer do
         %{state | hook_pids: new_hook_pids, monitors: new_monitors}}
   end
 
+  # TODO: make async or not depending on hook config
   def handle_call(:broadcast, _from, %{hook_pids: hook_pids} = state) do
     hooks = hook_pids
       |> Flow.from_enumerable()
@@ -109,8 +107,7 @@ defmodule Grapple.HookServer do
       end
   end
 
-  def handle_info(msg, state) do
+  def handle_info(_msg, state) do
     {:noreply, state}
   end
-
 end

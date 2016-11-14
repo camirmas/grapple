@@ -1,14 +1,9 @@
 defmodule Grapple.Hook do
-  @moduledoc """
-  This module provides a GenServer that is primarily responsible for 
-  broadcasting Webhooks. It also defines a `Hook` struct, and macros
-  for defining hooks.
-  """
+  @moduledoc false
   use GenServer
 
   @http Application.get_env(:grapple, :http)
 
-  # TODO: should probably make this configurable for users
   @enforce_keys [:url]
   defstruct [
     :url,
@@ -19,18 +14,16 @@ defmodule Grapple.Hook do
     headers: [],
     body: %{},
     query: %{},
+    timeout: 5000,
+    async: false,
   ]
 
   # API
 
-  @doc false
   def start_link(hook) do
     GenServer.start_link __MODULE__, hook
   end
 
-  @doc """
-  Returns all webhooks.
-  """
   def get_hook(pid) do
     GenServer.call pid, :get_hook
   end
@@ -39,10 +32,6 @@ defmodule Grapple.Hook do
     GenServer.call pid, :get_responses
   end
 
-  @doc """
-  Executes an HTTP request for every Webhook of the
-  specified topic, and returns the current logs.
-  """
   def broadcast(pid) do
     GenServer.call pid, :broadcast
   end
@@ -57,7 +46,6 @@ defmodule Grapple.Hook do
 
   # Callbacks
 
-  @doc false
   def init(hook) do
     {:ok, %{responses: [], hook: hook}}
   end
@@ -86,10 +74,8 @@ defmodule Grapple.Hook do
 
   # Helpers
 
-  @doc """
-  Messages a subscriber webhook with the latest updates via HTTP
-  """
   defp notify(webhook, body) do
+    # Messages a subscriber webhook with the latest updates via HTTP
     _notify(webhook, body)
     |> handle_response
   end
@@ -111,6 +97,7 @@ defmodule Grapple.Hook do
   end
 
   defp handle_response(response) do
+    # TODO: this needs another look
     case response do
       {:ok, %{status_code: 200, body: body}} ->
         {:success, body: body}
