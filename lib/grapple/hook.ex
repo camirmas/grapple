@@ -123,40 +123,4 @@ defmodule Grapple.Hook do
         {:ok, resp}
     end
   end
-
-  # Macros
-
-  @doc """
-  Allows modules to `use` Grapple.Hook in them
-  """
-  defmacro __using__(_opts) do
-    quote do
-      import Grapple.Hook
-    end
-  end
-
-  @doc """
-  Provides a unique topic based on an arbitrary name and the lexical module
-  """
-  def topicof(name), do: "#{__MODULE__}.#{name}"
-
-  @doc """
-  Allows users to define hookable functions that automatically publish
-  to subscribers whenever they are invoked
-  """
-  # TODO: Need logging service, no way to check results of hook sending.
-  defmacro defhook(name, do: block) do
-    id = Macro.to_string name
-
-    quote do
-      def unquote(name) do
-        topic  = unquote id |> topicof
-        result = unquote block
-
-        broadcast topic, result
-
-        result
-      end
-    end
-  end
 end

@@ -52,5 +52,68 @@ defmodule HookTest do
       assert [{^pid, ^hook}] = Grapple.get_hooks(topic.name)
       assert [{:success, [body: %{}]}] = responses
     end
+
+    test "broadcasts a hook and gets a 404", %{topic: topic} do
+      hook = Map.put(@hook, :url, "NOT_FOUND")
+      {:ok, pid} = Grapple.subscribe(topic.name, hook)
+
+      [%{hook: hook, responses: responses}] = Hook.broadcast(topic.name)
+
+      assert [:not_found] = responses
+      assert [{^pid, ^hook}] = Grapple.get_hooks(topic.name)
+    end
+
+    test "sends a hook with a body", %{topic: topic} do
+      body = %{stuff: true}
+      hook = Map.put(@hook, :body, body)
+      {:ok, pid} = Grapple.subscribe(topic.name, hook)
+
+      [%{hook: hook, responses: responses}] = Hook.broadcast(topic.name)
+
+      assert responses == [{:success, body: %{}}]
+      assert [{^pid, ^hook}] = Grapple.get_hooks(topic.name)
+    end
+
+    test "can broadcast lots of hooks", %{topic: topic} do
+      n = 100
+      for _ <- 1..n do
+        Grapple.subscribe(topic.name, @hook)
+      end
+
+      responses = Grapple.broadcast(topic.name)
+      assert length(responses) == n
+    end
+  end
+
+  describe "defhook" do
+    use Grapple
+
+    test "hooks defined with the macro will broadcast to topics of the same name", 
+      %{topic: topic} do
+        {:ok, pid} = Grapple.subscribe(topic.name, @hook)
+
+        defmodule Hookable do
+          defhook pokemon do
+          end
+        end
+
+        Hookable.pokemon()
+
+        assert [{^pid, [success: [body: %{}]]}] = Grapple.get_responses(topic.name)
+    end
+
+    test "hooks defined with the macro (with args) will broadcast
+      to topics of the same name", %{topic: topic} do
+        {:ok, pid} = Grapple.subscribe(topic.name, @hook)
+
+        defmodule HookableArgs do
+          defhook pokemon(name), do: name
+        end
+
+        res = HookableArgs.pokemon("dragonite")
+
+        assert res == "dragonite"
+        assert [{^pid, [success: [body: %{}]]}] = Grapple.get_responses(topic.name)
+    end
   end
 end

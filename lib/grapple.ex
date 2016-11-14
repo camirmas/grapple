@@ -50,4 +50,32 @@ defmodule Grapple do
   def remove_hook(topic, hook) when is_pid(hook) do
     Grapple.Server.remove_hook(topic, hook)
   end
+
+  # Macros
+
+  @doc """
+  Allows modules to `use` Grapple.Hook in them
+  """
+  defmacro __using__(_opts) do
+    quote do
+      import Grapple
+    end
+  end
+
+  @doc """
+  Allows users to define hookable functions that automatically publish
+  to subscribers whenever they are invoked
+  """
+  defmacro defhook({name, _, _} = func, do: block) do
+    quote do
+      def unquote(func) do
+        topic  = unquote name
+        result = unquote block
+
+        broadcast topic, result
+
+        result
+      end
+    end
+  end
 end
