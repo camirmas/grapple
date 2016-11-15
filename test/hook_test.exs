@@ -1,5 +1,6 @@
 defmodule HookTest do
   use ExUnit.Case
+  doctest Grapple
   alias Grapple.Hook
 
   @hook %Hook{url: "/stuff"}

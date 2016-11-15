@@ -14,11 +14,13 @@ defmodule Grapple do
   # Topics
 
   @doc """
-  Adds a new topic. Topic must be an atom.
+  Adds a new topic. Topic must be an atom. Returns a `Grapple.Server.Topic`
+  struct which has a `name` and a `sup` (Supervisor pid).
 
     ## Examples:
-        iex> Grapple.add_topic(:pokemon)
-        {:ok, %Grapple.Server.Topic{name: :pokemon, sup: #PID<0.242.0>}
+        iex> {:ok, topic = %Grapple.Server.Topic{}} = Grapple.add_topic(:pokemon)
+        iex> topic.name
+        :pokemon
   """
   def add_topic(topic) when is_atom(topic) do
     Grapple.Server.add_topic(topic)
@@ -37,13 +39,10 @@ defmodule Grapple do
   Lists all topics.
 
     ## Examples:
-        iex> Grapple.add_topic(:pokemon)
-        {:ok, %Grapple.Server.Topic{name: :pokemon, sup: #PID<0.242.0>}
-        iex> Grapple.add_topic(:gyms)
-        {:ok, %Grapple.Server.Topic{name: :gyms, sup: #PID<0.258.0>}
-        iex> Grapple.get_topics
-        [%Grapple.Server.Topic{name: :gyms, sup: #PID<0.258.0>,
-        %Grapple.Server.Topic{name: :pokemon, sup: #PID<0.242.0>]
+        iex> {:ok, pokemon} = Grapple.add_topic(:pokemon)
+        iex> {:ok, gyms} = Grapple.add_topic(:gyms)
+        iex> [gyms, pokemon] == Grapple.get_topics
+        true
   """
   def get_topics do
     Grapple.Server.get_topics
@@ -68,8 +67,10 @@ defmodule Grapple do
   Returns the `pid` of the Hook process that was created.
 
     ## Examples:
-        iex> Grapple.subscribe(:pokemon, %Grapple.Hook{url: "my-api-endpoint"})
-        {:ok, #PID<0.277.0>}
+        iex> {:ok, _pokemon} = Grapple.add_topic(:pokemon)
+        iex> {:ok, pid} = Grapple.subscribe(:pokemon, %Grapple.Hook{url: "my-api"})
+        iex> is_pid(pid)
+        true
   """
   def subscribe(topic, %Grapple.Hook{} = webhook) when is_atom(topic) do
     Grapple.Server.subscribe(topic, webhook)
@@ -81,10 +82,12 @@ defmodule Grapple do
   Returns a list of hooks and their responses.
 
     ## Examples:
+        iex> {:ok, _pokemon} = Grapple.add_topic(:pokemon)
+        iex> {:ok, _pid} = Grapple.subscribe(:pokemon, %Grapple.Hook{url: "my-api"})
         iex> Grapple.broadcast(:pokemon)
         [%{hook: %Grapple.Hook{body: %{}, headers: [], life: nil, method: "GET",
             owner: nil, query: %{}, ref: nil, url: "my-api"},
-           responses: [error: [reason: :nxdomain]]}]
+        responses: [ok: %{body: %{}, status_code: 200}]}]
   """
   def broadcast(topic) when is_atom(topic) do
     Grapple.Server.broadcast(topic)
@@ -102,10 +105,12 @@ defmodule Grapple do
   Returns a list of all hooks subscribed to a topic.
 
     ## Examples:
-        iex> Grapple.get_hooks(:pokemon)
-        [{#PID<0.277.0>,
-          %Grapple.Hook{body: %{}, headers: [], life: nil, method: "GET", owner: nil,
-           query: %{}, ref: nil, url: "my-api"}}]
+        iex> {:ok, _pokemon} = Grapple.add_topic(:pokemon)
+        iex> {:ok, _pid} = Grapple.subscribe(:pokemon, %Grapple.Hook{url: "my-api"})
+        iex> [{_pid, hook}] = Grapple.get_hooks(:pokemon)
+        iex> hook
+        %Grapple.Hook{body: %{}, headers: [], life: nil, method: "GET", owner: nil,
+         query: %{}, ref: nil, url: "my-api"}
   """
   def get_hooks(topic) when is_atom(topic) do
     Grapple.Server.get_hooks(topic)
@@ -115,9 +120,12 @@ defmodule Grapple do
   Returns a list of responses for each hook on the given topic.
 
     ## Examples
-        iex> Grapple.get_responses(:pokemon)
-        [{#PID<0.277.0>,
-          [success: [body: %{}]]}]
+        iex> {:ok, _pokemon} = Grapple.add_topic(:pokemon)
+        iex> {:ok, _pid} = Grapple.subscribe(:pokemon, %Grapple.Hook{url: "my-api"})
+        iex> [_hook] = Grapple.broadcast(:pokemon)
+        iex> [{_pid, responses}] = Grapple.get_responses(:pokemon)
+        iex> responses
+        [ok: %{body: %{}, status_code: 200}]
   """
   def get_responses(topic) when is_atom(topic) do
     Grapple.Server.get_responses(topic)
