@@ -77,7 +77,6 @@ defmodule Grapple.Hook do
   defp notify(webhook, body) do
     # Messages a subscriber webhook with the latest updates via HTTP
     _notify(webhook, body)
-    |> handle_response
   end
 
   defp _notify(webhook = %Grapple.Hook{method: "GET"}, _body) do
@@ -94,20 +93,5 @@ defmodule Grapple.Hook do
 
   defp _notify(webhook = %Grapple.Hook{method: "DELETE"}, _body) do
     @http.delete(webhook.url, webhook.headers)
-  end
-
-  defp handle_response(response) do
-    # TODO: this needs another look
-    case response do
-      {:ok, %{status_code: 200, body: body}} ->
-        {:success, body: body}
-      {:ok, %{status_code: 404}} ->
-        #delete subscrip
-        :not_found
-      {:error, %{reason: reason}} ->
-        {:error, reason: reason}
-      {:ok, resp} ->
-        {:ok, resp}
-    end
   end
 end
