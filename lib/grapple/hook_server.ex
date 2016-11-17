@@ -6,8 +6,8 @@ defmodule Grapple.HookServer do
 
   # API
 
-  def start_link(topic, hook_sup) do
-    GenServer.start_link(__MODULE__, hook_sup, name: topic)
+  def start_link(topic) do
+    GenServer.start_link(__MODULE__, topic, name: topic)
   end
 
   def subscribe(topic, webhook) do
@@ -36,7 +36,8 @@ defmodule Grapple.HookServer do
 
   # Callbacks
 
-  def init(hook_sup) do
+  def init(topic) do
+    hook_sup = :"#{topic}HookSupervisor"
     state = %{hook_pids: [], hook_sup: hook_sup, monitors: []}
     {:ok, state}
   end

@@ -80,6 +80,7 @@ defmodule Grapple.Hook do
   end
 
   defp _notify(webhook = %Grapple.Hook{method: "GET"}, _body) do
+    #Process.exit(self, :kill)
     @http.get(webhook.url, webhook.headers)
   end
 

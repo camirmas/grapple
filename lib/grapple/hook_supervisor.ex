@@ -4,12 +4,12 @@ defmodule Grapple.HookSupervisor do
   use Supervisor
   import Supervisor.Spec
 
-  def start_link(_) do
-    Supervisor.start_link(__MODULE__, [])
+  def start_link(topic) do
+    Supervisor.start_link(__MODULE__, [], name: :"#{topic}HookSupervisor")
   end
 
   def init(_) do
-    opts = [restart: :temporary]
+    opts = [restart: :permanent]
     children = [worker(Grapple.Hook, [], opts)]
     supervise children, strategy: :simple_one_for_one
   end
