@@ -33,15 +33,15 @@ defmodule Grapple.Hook do
   end
 
   def broadcast(pid) do
-    GenServer.call pid, :broadcast
+    GenServer.cast pid, :broadcast
   end
 
   def broadcast(pid, body) when is_nil(body) do
-    GenServer.call pid, :broadcast
+    GenServer.cast pid, :broadcast
   end
 
   def broadcast(pid, body) do
-    GenServer.call pid, {:broadcast, body}
+    GenServer.cast pid, {:broadcast, body}
   end
 
   # Callbacks
@@ -58,41 +58,43 @@ defmodule Grapple.Hook do
     {:reply, responses, state}
   end
 
-  def handle_call(:broadcast, _from, %{hook: hook, responses: responses} = state) do
-    response = notify(hook, hook.body)
-    new_state = %{state | responses: [response | responses]}
+  def handle_cast(:broadcast, %{hook: hook, responses: responses} = state) do
+      response = notify(hook, hook.body)
+      new_state = %{state | responses: [response | responses]}
+      send_to_owner(hook, response)
 
-    {:reply, new_state, new_state}
+      {:noreply, new_state}
   end
 
-  def handle_call({:broadcast, body}, _from, %{hook: hook, responses: responses} = state) do
-    response = notify(hook, body)
-    new_state = %{state | responses: [response | responses]}
+  def handle_cast({:broadcast, body}, %{hook: hook, responses: responses} = state) do
+      response = notify(hook, body)
+      new_state = %{state | responses: [response | responses]}
+      send_to_owner(hook, response)
 
-    {:reply, new_state, new_state}
+      {:noreply, new_state}
   end
 
   # Helpers
 
-  defp notify(webhook, body) do
-    # Messages a subscriber webhook with the latest updates via HTTP
-    _notify(webhook, body)
-  end
-
-  defp _notify(webhook = %Grapple.Hook{method: "GET"}, _body) do
-    #Process.exit(self, :kill)
+  defp notify(webhook = %Grapple.Hook{method: "GET"}, _body) do
     @http.get(webhook.url, webhook.headers)
   end
 
-  defp _notify(webhook = %Grapple.Hook{method: "POST"}, body) do
+  defp notify(webhook = %Grapple.Hook{method: "POST"}, body) do
     @http.post(webhook.url, webhook.headers, body)
   end
 
-  defp _notify(webhook = %Grapple.Hook{method: "PUT"}, body) do
+  defp notify(webhook = %Grapple.Hook{method: "PUT"}, body) do
     @http.put(webhook.url, webhook.headers, body)
   end
 
-  defp _notify(webhook = %Grapple.Hook{method: "DELETE"}, _body) do
+  defp notify(webhook = %Grapple.Hook{method: "DELETE"}, _body) do
     @http.delete(webhook.url, webhook.headers)
   end
+
+  defp send_to_owner(%{owner: owner}, response) when is_pid(owner) do
+    send(owner, {:hook_response, self, response})
+  end
+
+  defp send_to_owner(_, _), do: nil
 end

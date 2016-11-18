@@ -79,15 +79,13 @@ defmodule Grapple do
   @doc """
   Sends HTTP requests for all hooks subscribed to the given topic.
 
-  Returns a list of hooks and their responses.
+  Returns `:ok`.
 
     ## Examples:
         iex> {:ok, _pokemon} = Grapple.add_topic(:pokemon)
         iex> {:ok, _pid} = Grapple.subscribe(:pokemon, %Grapple.Hook{url: "my-api"})
         iex> Grapple.broadcast(:pokemon)
-        [%{hook: %Grapple.Hook{body: %{}, headers: [], life: nil, method: "GET",
-            owner: nil, query: %{}, ref: nil, url: "my-api"},
-        responses: [ok: %{body: %{}, status_code: 200}]}]
+        :ok
   """
   def broadcast(topic) when is_atom(topic) do
     Grapple.Server.broadcast(topic)
@@ -122,10 +120,9 @@ defmodule Grapple do
     ## Examples
         iex> {:ok, _pokemon} = Grapple.add_topic(:pokemon)
         iex> {:ok, _pid} = Grapple.subscribe(:pokemon, %Grapple.Hook{url: "my-api"})
-        iex> [_hook] = Grapple.broadcast(:pokemon)
         iex> [{_pid, responses}] = Grapple.get_responses(:pokemon)
         iex> responses
-        [ok: %{body: %{}, status_code: 200}]
+        []
   """
   def get_responses(topic) when is_atom(topic) do
     Grapple.Server.get_responses(topic)

@@ -2,7 +2,7 @@ defmodule Grapple.HookServer do
   @moduledoc false
   use GenServer
   alias Grapple.Hook
-  alias Experimental.Flow
+  #alias Experimental.Flow
 
   # API
 
@@ -10,16 +10,8 @@ defmodule Grapple.HookServer do
     GenServer.start_link(__MODULE__, topic, name: topic)
   end
 
-  def subscribe(topic, webhook) do
-    GenServer.call(topic, {:subscribe, webhook})
-  end
-
-  def broadcast(topic) do
-    GenServer.call(topic, :broadcast, :infinity)
-  end
-
-  def broadcast(topic, body) do
-    GenServer.call(topic, {:broadcast, body}, :infinity)
+  def subscribe(topic, hook) do
+    GenServer.call(topic, {:subscribe, hook})
   end
 
   def get_hooks(topic) do
@@ -34,6 +26,14 @@ defmodule Grapple.HookServer do
     GenServer.cast(topic, {:remove_hook, hook_pid})
   end
 
+  def broadcast(topic) do
+    GenServer.cast(topic, :broadcast)
+  end
+
+  def broadcast(topic, body) do
+    GenServer.cast(topic, {:broadcast, body})
+  end
+
   # Callbacks
 
   def init(topic) do
@@ -42,33 +42,14 @@ defmodule Grapple.HookServer do
     {:ok, state}
   end
 
-  def handle_call({:subscribe, webhook}, _from, %{hook_pids: hook_pids,
+  def handle_call({:subscribe, hook}, _from, %{hook_pids: hook_pids,
     hook_sup: hook_sup, monitors: monitors} = state) do
-      {:ok, pid} = Supervisor.start_child(hook_sup, [webhook])
+      {:ok, pid} = Supervisor.start_child(hook_sup, [hook])
       ref = Process.monitor(pid)
       new_monitors = [{ref, pid} | monitors]
       new_hook_pids = [pid | hook_pids]
       {:reply, {:ok, pid},
         %{state | hook_pids: new_hook_pids, monitors: new_monitors}}
-  end
-
-  # TODO: make async or not depending on hook config
-  def handle_call(:broadcast, _from, %{hook_pids: hook_pids} = state) do
-    hooks = hook_pids
-      |> Flow.from_enumerable()
-      |> Flow.map(fn hook_pid -> Hook.broadcast(hook_pid) end)
-      |> Enum.to_list()
-
-    {:reply, hooks, state}
-  end
-
-  def handle_call({:broadcast, body}, _from, %{hook_pids: hook_pids} = state) do
-    hooks = hook_pids
-      |> Flow.from_enumerable()
-      |> Flow.map(fn hook_pid -> Hook.broadcast(hook_pid, body) end)
-      |> Enum.to_list()
-
-    {:reply, hooks, state}
   end
 
   def handle_call(:get_hooks, _from, %{hook_pids: hook_pids} = state) do
@@ -93,6 +74,20 @@ defmodule Grapple.HookServer do
       new_hooks = List.delete(hook_pids, hook_pid)
 
       {:noreply, %{state | hook_pids: new_hooks}}
+  end
+
+  def handle_cast(:broadcast, %{hook_pids: hook_pids} = state) do
+    hook_pids
+    |> Enum.each(fn hook_pid -> Hook.broadcast(hook_pid) end)
+
+    {:noreply, state}
+  end
+
+  def handle_cast({:broadcast, body}, %{hook_pids: hook_pids} = state) do
+    hook_pids
+    |> Enum.each(fn hook_pid -> Hook.broadcast(hook_pid, body) end)
+
+    {:noreply, state}
   end
 
   def handle_info({:DOWN, ref, _, pid, _}, %{hook_pids: hook_pids,
