@@ -15,7 +15,6 @@ defmodule Grapple.Hook do
     body: %{},
     query: %{},
     timeout: 5000,
-    async: false,
   ]
 
   # API

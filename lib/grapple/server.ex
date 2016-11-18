@@ -57,9 +57,7 @@ defmodule Grapple.Server do
   # Callbacks
 
   def init(topics_sup) do
-    {:ok, store_pid} = @backend.start_link(:topics)
-    topics = @backend.all(store_pid)
-    state = %{store_pid: store_pid, topics: topics, topics_sup: topics_sup}
+    state = %{topics: [], topics_sup: topics_sup}
     {:ok, state}
   end
 

@@ -1,4 +1,5 @@
 defmodule Grapple.TopicsSupervisor do
+  @moduledoc false
   use Supervisor
   import Supervisor.Spec
 
