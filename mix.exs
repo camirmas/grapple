@@ -3,11 +3,11 @@ defmodule Grapple.Mixfile do
 
   def project do
     [app: :grapple,
-     version: "0.2.0",
+     version: "1.0.0",
      elixir: "~> 1.3",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     description: "Webhooks service in a PubSub manner",
+     description: "Webhook magic in Elixir",
      package: package,
      deps: deps(),
    
