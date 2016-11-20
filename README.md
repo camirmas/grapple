@@ -13,7 +13,7 @@ This API lends itself nicely to Webhooks, REST Hooks, Server Push, and more!
 
   ```elixir
   def deps do
-    [{:grapple, "~> 0.2.0"}]
+    [{:grapple, "~> 1.0.0"}]
   end
   ```
 
@@ -32,7 +32,7 @@ iex -S mix
 ```
 
 ## Documentation
-https://hexdocs.pm/grapple/0.2.0
+https://hexdocs.pm/grapple/1.0.0
 
 ---
 
@@ -42,7 +42,6 @@ https://hexdocs.pm/grapple/0.2.0
 
 The default struct, `%Grapple.Hook{}`, has the following fields:
 
-- `topic`
 - `url`
 - `owner`
 - `life`
@@ -51,86 +50,88 @@ The default struct, `%Grapple.Hook{}`, has the following fields:
 - `headers`
 - `body`
 - `query`
+- `timeout`
 
-Note that `topic` and `url` are **required**. This will soon be available as an environment configuration setting.
+Note that `url` is **required**.
+
+**Topics**
+
+To create a new topic, pass an atom to the `add_topic` function, which returns
+a `Topic` struct.
+
+```elixir
+{:ok, topic = %Grapple.Server.Topic{}} = Grapple.add_topic(:pokemon)
+```
 
 **Subscribing**
 
-To subscribe to a webhook, pass a `Hook` to the `subscribe` function, which returns the topic name and the unique refernce to that particular hook:
+To subscribe to a webhook, pass the topic name and a `Hook` to the `subscribe` function, which returns the topic name and the unique refernce to that particular hook:
 ```elixir
-hook = %Grapple.Hook{topic: "pokemon", url: "http://pokeapi.co/api/v2/pokemon/149"}
-{topic, ref} = Grapple.Hook.subscribe(hook)
+{:ok, pid} = Grapple.subscribe(:pokemon, %Grapple.Hook{url: "my-api"})
 ```
+
 It's important that topics are unique across your application's modules (and `topicof` ensures this) because it makes implementing higher-level features, such as [REST Hooks](http://resthooks.org), much easier.
 
 **Publishing**
 
-To broadcast a webhook, pass a `topic`, and optionally arbitrary `data`.
+To broadcast all webhooks for a given topic, pass a `topic` name, and optionally arbitrary `data`.
 This will trigger HTTP requests for any stored hooks (and their subscribers) whose `topic` values match the given `topic`, and return the parsed responses.
+
 ```elixir
 # this will send hooks with their default `body`
-[response] = Grapple.Hook.broadcast("pokemon")
+Grapple.broadcast(:pokemon)
 
 # you can also pass arbitrary data that will be sent instead
-[response] = Grapple.Hook.broadcast("pokemon", data)
+Grapple.Hook.broadcast("pokemon", data)
 ```
 
-Responses will take one of the following forms:
+Note that the call to `broadcast` does not actually return the responses. This is because
+hooks run asynchronously. In order to retrieve responses, you can either ask for them explicitly:
 ```elixir
-# on success
-%{hook: hook, response: {:success, body: body}, timestamp: timestamp} = response
+[{_pid, responses}] = Grapple.get_responses(:pokemon)
+```
 
-# on 404
-:not_found = response
-
-# on error
-%{hook: hook, response: {:error, reason: reason}, timestamp: timestamp} = response
+Or you can, when subscribing a `Hook`, set `:owner` to the pid of an existing
+process that can receive a message when that `Hook` completes its `broadcast`.
+The format of the message is `{:hook_response, hook_pid, response}`, with
+`response` being a response from an `HTTPoison` request. See [HTTPoison](https://github.com/edgurgel/httpoiso://github.com/edgurgel/httpoison)
+for more info. As an example, if your `:owner` process is a `GenServer`,
+you would define a `handle_info` function like so:
+```elixir
+def handle_info({:hook_response, pid, response}, state) do
+  # some logic
+  {:noreply, state}
+end
 ```
 
 ### Macro
 
-Broadcasting can also be done via a macro, `defhook`.
+Broadcasting can also be done via a macro, `defhook`. The macro defines a named
+method in the lexical module. When invoked, the method's name will be used as the
+topic, and if the method name matches an existing topic, all `Hook`s on that topic
+will be `broadcast`. The result will be broadcast as the `body` to any hook requests
+on that topic, unless it returns `nil`, in which case hooks will be sent with the
+default `body`.
 
-The macro defines a named method in the lexical module. When invoked, the method's name will be used in the topic (takes the form `#{__MODULE__}.#{name}`).
-
-The result will be broadcasted as the `body` to any hook requests on that topic, unless it returns `nil`, in which case hooks will be sent with the default `body`.
-
-The following example implements a hook that determines the game profile for Dragonite, automatically sending updates to the `http://pokeapi.co` API:
+The following example implements a hook that determines the game profile for Dragonite,
+automatically sending requests to the `http://pokeapi.co`:
 
 ```elixir
-hook = %Grapple.Hook{topic: "Pokemon.dragonite", url: "http://pokeapi.co/api/v2/pokemon/149"}
+Grapple.subscribe(:pokemon, %Grapple.Hook{url: "http://pokeapi.co/api/v2/pokemon/149"})
 
 defmodule Pokemon do
   use Grapple.Hook
 
-  # add some logic (like define Dragonite's profile) and return a body or return nil
   defhook dragonite do
-    %{ name: :dragonite,
-       abilities: [:multiscale, :innerfocus],
-       stats: %{health: 32, speed: 30, attack: 32, defense: 31, speca: 24, specd: 30} }
+    # add some logic and return a body or return nil
+    # In this case, sends "GET" request to the `Hook` URL.
   end
 end
 ```
 
-You should try to ensure that your hook method doesn't get called excessively since it's highly unlikely that subscribers will want to be repeatedly hit. This certainly depends on your own unique needs, but it's good to keep this fact in mind.
-
-Broadcasts are automatically parallelized vertically via `Experimantal.Flow`. More refined horizontal parallelization can be achieved via OTP and is controlled by the user.
-
-### Plug
-
-Finally, broadcasting can be done with `Grapple.Plug`. Here's an example from a Phoenix Controller:
-
-```elixir
-defmodule Pokedex.PokemonController do
-  use Pokedex.Web, :controller
-
-  plug Grapple.Plug, [topic: "pokemon"] when action in [:get]
-
-  def get(conn, _opts) do
-    conn
-  end
-end
-```
+You should try to ensure that your hook method doesn't get called excessively
+since it's highly unlikely that subscribers will want to be repeatedly hit.
+This certainly depends on your own unique needs, but it's good to keep this fact in mind.
 
 ## License
 

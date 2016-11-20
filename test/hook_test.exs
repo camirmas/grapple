@@ -92,7 +92,8 @@ defmodule HookTest do
 
         Hookable.pokemon()
 
-        assert [{^pid, [ok: %{body: %{}, status_code: 200}]}] = Grapple.get_responses(topic.name)
+        assert_receive {:hook_response, ^pid, response}
+        assert response == {:ok, %{body: %{}, status_code: 200}}
     end
 
     test "hooks defined with the macro (with args) will broadcast
@@ -105,8 +106,8 @@ defmodule HookTest do
 
         res = HookableArgs.pokemon("dragonite")
 
-        assert res == "dragonite"
-        assert [{^pid, [ok: %{body: %{}, status_code: 200}]}] = Grapple.get_responses(topic.name)
+        assert_receive {:hook_response, ^pid, response}
+        assert response == {:ok, %{body: %{}, status_code: 200}}
     end
   end
 end
