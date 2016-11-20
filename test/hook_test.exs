@@ -104,7 +104,7 @@ defmodule HookTest do
           defhook pokemon(name), do: name
         end
 
-        res = HookableArgs.pokemon("dragonite")
+        HookableArgs.pokemon("dragonite")
 
         assert_receive {:hook_response, ^pid, response}
         assert response == {:ok, %{body: %{}, status_code: 200}}

@@ -11,10 +11,10 @@ defmodule Grapple.Hook do
     :life,
     :ref,
     method: "GET",
-    headers: [],
     body: %{},
+    headers: [],
+    options: [],
     query: %{},
-    timeout: 5000,
   ]
 
   # API
@@ -75,20 +75,20 @@ defmodule Grapple.Hook do
 
   # Helpers
 
-  defp notify(webhook = %Grapple.Hook{method: "GET"}, _body) do
-    @http.get(webhook.url, webhook.headers)
+  defp notify(hook = %Grapple.Hook{method: "GET"}, _body) do
+    @http.get(hook.url, hook.headers, hook.options)
   end
 
-  defp notify(webhook = %Grapple.Hook{method: "POST"}, body) do
-    @http.post(webhook.url, webhook.headers, body)
+  defp notify(hook = %Grapple.Hook{method: "POST"}, body) do
+    @http.post(hook.url, body, hook.headers, hook.options)
   end
 
-  defp notify(webhook = %Grapple.Hook{method: "PUT"}, body) do
-    @http.put(webhook.url, webhook.headers, body)
+  defp notify(hook = %Grapple.Hook{method: "PUT"}, body) do
+    @http.put(hook.url, body, hook.headers, hook.options)
   end
 
-  defp notify(webhook = %Grapple.Hook{method: "DELETE"}, _body) do
-    @http.delete(webhook.url, webhook.headers)
+  defp notify(hook = %Grapple.Hook{method: "DELETE"}, _body) do
+    @http.delete(hook.url, hook.headers, hook.options)
   end
 
   defp send_to_owner(%{owner: owner}, response) when is_pid(owner) do

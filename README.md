@@ -47,12 +47,14 @@ The default struct, `%Grapple.Hook{}`, has the following fields:
 - `life`
 - `ref`
 - `method`
-- `headers`
 - `body`
+- `headers`
+- `options`
 - `query`
-- `timeout`
 
-Note that `url` is **required**.
+Note that `url` is **required**. Additionally, the fields `body`, `headers`, and
+`options` all correspond to those used in `HTTPoison` requests. See [HTTPoison](https://github.com/edgurgel/httpoiso://github.com/edgurgel/httpoison)
+for more info.
 
 **Topics**
 
