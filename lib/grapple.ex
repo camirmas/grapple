@@ -137,6 +137,52 @@ defmodule Grapple do
     Grapple.Server.remove_hook(topic, hook)
   end
 
+  @doc """
+  Starts polling for a hook if the hook already has a specified interval (milliseconds).
+
+  Use this function if the specified hook already has an interval, but
+  polling is not currently running.
+
+  Returns `:ok` if successful or `{:error, "No interval specified, use `start_polling/2`."}`
+  otherwise.
+
+    iex> {:ok, _pokemon} = Grapple.add_topic(:pokemon)
+    iex> {:ok, pid} = Grapple.subscribe(:pokemon, %Grapple.Hook{url: "my-api"})
+    iex> Grapple.start_polling(pid)
+    {:error, "No interval specified, use `start_polling/2`."}
+  """
+  def start_polling(hook) when is_pid(hook) do
+    Grapple.Server.start_polling(hook)
+  end
+
+  @doc """
+  Starts polling for a hook with the given interval (milliseconds).
+
+  Returns `:ok` if successful.
+
+    iex> {:ok, _pokemon} = Grapple.add_topic(:pokemon)
+    iex> {:ok, pid} = Grapple.subscribe(:pokemon, %Grapple.Hook{url: "my-api"})
+    iex> Grapple.start_polling(pid, 3000)
+    :ok
+  """
+  def start_polling(hook, interval) when is_pid(hook) and is_integer(interval) do
+    Grapple.Server.start_polling(hook, interval)
+  end
+
+  @doc """
+  Stops a hook from polling.
+
+  Returns `:ok`.
+
+    iex> {:ok, _pokemon} = Grapple.add_topic(:pokemon)
+    iex> {:ok, pid} = Grapple.subscribe(:pokemon, %Grapple.Hook{url: "my-api", interval: 3000})
+    iex> Grapple.stop_polling(pid)
+    :ok
+  """
+  def stop_polling(hook) when is_pid(hook) do
+    Grapple.Server.stop_polling(hook)
+  end
+
   # Macros
 
   @doc """

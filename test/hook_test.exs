@@ -13,7 +13,7 @@ defmodule HookTest do
     [topic: topic, hook: hook]
   end
 
-  describe "hooks" do
+  describe "hooks subscriptions" do
     test "can subscribe hooks to topics", %{topic: topic, hook: hook} do
       {:ok, _pid} = Grapple.subscribe(topic.name, hook)
     end
@@ -46,7 +46,9 @@ defmodule HookTest do
 
         assert [] = Grapple.get_hooks(topic.name)
     end
+  end
 
+  describe "hook broadcasts" do
     test "can broadcast hooks", %{topic: topic, hook: hook} do
       {:ok, pid} = Grapple.subscribe(topic.name, hook)
 
@@ -73,6 +75,51 @@ defmodule HookTest do
 
       Hook.broadcast(topic.name)
 
+      assert_receive {:hook_response, ^pid, response}
+      assert response == {:ok, %{body: %{}, status_code: 200}}
+    end
+  end
+
+  describe "hook polling" do
+    test "can subscribe a hook with immediate polling", %{topic: topic,
+      hook: hook} do
+        hook = Map.put(hook, :interval, 1)
+        {:ok, pid} = Grapple.subscribe(topic.name, hook)
+
+        assert_receive {:hook_response, ^pid, response}
+        assert response == {:ok, %{body: %{}, status_code: 200}}
+    end
+
+    test "can subscribe a hook without polling, but can start it later",
+      %{topic: topic, hook: hook} do
+        {:ok, pid} = Grapple.subscribe(topic.name, hook)
+
+        assert Grapple.start_polling(pid, 1) == :ok
+        assert_receive {:hook_response, ^pid, response}
+        assert response == {:ok, %{body: %{}, status_code: 200}}
+    end
+
+    test "cannot start polling without an interval", %{topic: topic, hook: hook} do
+      {:ok, pid} = Grapple.subscribe(topic.name, hook)
+
+      resp = Grapple.start_polling(pid)
+
+      assert resp == {:error, "No interval specified, use `start_polling/2`."}
+    end
+
+    test "can stop polling", %{topic: topic, hook: hook} do
+      hook = Map.put(hook, :interval, 1)
+      {:ok, pid} = Grapple.subscribe(topic.name, hook)
+
+      assert Grapple.stop_polling(pid) == :ok
+    end
+
+    test "can restart polling", %{topic: topic, hook: hook} do
+      hook = Map.put(hook, :interval, 1)
+      {:ok, pid} = Grapple.subscribe(topic.name, hook)
+
+      assert Grapple.stop_polling(pid) == :ok
+      assert Grapple.start_polling(pid) == :ok
       assert_receive {:hook_response, ^pid, response}
       assert response == {:ok, %{body: %{}, status_code: 200}}
     end

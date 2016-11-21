@@ -30,8 +30,20 @@ defmodule Grapple.Server do
     GenServer.call(__MODULE__, :get_topics)
   end
 
-  def subscribe(topic, webhook) do
-    Grapple.HookServer.subscribe(topic, webhook)
+  def subscribe(topic, hook) do
+    Grapple.HookServer.subscribe(topic, hook)
+  end
+
+  def start_polling(hook_pid) do
+    Grapple.Hook.start_polling(hook_pid)
+  end
+
+  def start_polling(hook_pid, interval) do
+    Grapple.Hook.start_polling(hook_pid, interval)
+  end
+
+  def stop_polling(hook_pid) do
+    Grapple.Hook.stop_polling(hook_pid)
   end
 
   def broadcast(topic) do
