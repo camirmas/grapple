@@ -62,8 +62,10 @@ defmodule Grapple.Server do
     Grapple.HookServer.get_responses(topic)
   end
 
-  def remove_hook(topic, hook_pid) do
-    Grapple.HookServer.remove_hook(topic, hook_pid)
+  def remove_hook(hook_pid) do
+    if Process.alive?(hook_pid) do
+      Process.exit(hook_pid, :kill)
+    end
   end
 
   # Callbacks

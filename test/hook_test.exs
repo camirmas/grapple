@@ -27,7 +27,7 @@ defmodule HookTest do
     test "can remove hooks from topics", %{topic: topic, hook: hook} do
       {:ok, pid} = Grapple.subscribe(topic.name, hook)
       ref = Process.monitor(pid)
-      Grapple.remove_hook(topic.name, pid)
+      Grapple.remove_hook(pid)
 
       assert_receive {:DOWN, ^ref, _, _, _}
     end
