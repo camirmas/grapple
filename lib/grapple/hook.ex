@@ -2,7 +2,7 @@ defmodule Grapple.Hook do
   @moduledoc false
   use GenServer
 
-  @http Application.get_env(:grapple, :http)
+  @http Application.get_env(:grapple, :http, HTTPoison)
 
   @enforce_keys [:url]
   defstruct [
@@ -150,13 +150,13 @@ defmodule Grapple.Hook do
                           [self])
   end
 
-  defp stop_timer(tref) do
-    # Stops the :timer with the given ref
-    :timer.cancel(tref)
-  end
-
   defp stop_timer(tref) when is_nil(tref) do
     # if :timer ref is nil then nothing needs to be done
     {:ok, "No timer"}
+  end
+
+  defp stop_timer(tref) do
+    # Stops the :timer with the given ref
+    :timer.cancel(tref)
   end
 end
