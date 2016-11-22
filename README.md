@@ -13,7 +13,7 @@ This API lends itself nicely to Webhooks, REST Hooks, Server Push, and more!
 
   ```elixir
   def deps do
-    [{:grapple, "~> 1.0.1"}]
+    [{:grapple, "~> 1.1.0"}]
   end
   ```
 
@@ -32,7 +32,7 @@ iex -S mix
 ```
 
 ## Documentation
-https://hexdocs.pm/grapple/1.0.1
+https://hexdocs.pm/grapple/1.1.0
 
 ---
 
@@ -74,7 +74,7 @@ To subscribe to a webhook, pass the topic name and a `Hook` to the `subscribe` f
 
 It's important that topics are unique across your application's modules (and `topicof` ensures this) because it makes implementing higher-level features, such as [REST Hooks](http://resthooks.org), much easier.
 
-**Publishing**
+**Broadcasting**
 
 To broadcast all webhooks for a given topic, pass a `topic` name, and optionally arbitrary `data`.
 This will trigger HTTP requests for any stored hooks (and their subscribers) whose `topic` values match the given `topic`, and return the parsed responses.
@@ -104,6 +104,32 @@ def handle_info({:hook_response, pid, response}, state) do
   # some logic
   {:noreply, state}
 end
+```
+
+**Polling**
+
+You can have individual hooks `broadcast` on an interval in two different ways.
+The first is to include an `interval` field with an integer (in milliseconds)
+when defining a `Hook`:
+```elixir
+Grapple.subscribe(:pokemon, %Grapple.Hook{url: "my-api", interval: 3000}
+```
+
+You can also take an existing hook that does not yet have an interval, and tell
+it to start polling:
+```elxir
+{:ok, pid} = Grapple.subscribe(:pokemon, %Grapple.Hook{url: "my-api", interval: 3000}
+Grapple.start_polling(pid, 3000)
+```
+
+To turn off polling for a particular hook:
+```elixir
+Grapple.stop_polling(pid)
+```
+
+To start polling for a particular hook, if it already has an `interval`:
+```elixir
+Grapple.start_polling(pid)
 ```
 
 ### Macro
