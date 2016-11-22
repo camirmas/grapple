@@ -137,8 +137,7 @@ defmodule Grapple do
   Use this function if the specified hook already has an interval, but
   polling is not currently running.
 
-  Returns `:ok` if successful or `{:error, "No interval specified, use `start_polling/2`."}`
-  otherwise.
+  Returns `:ok` if successful or `{:error, msg}` otherwise.
 
     iex> {:ok, _pokemon} = Grapple.add_topic(:pokemon)
     iex> {:ok, pid} = Grapple.subscribe(:pokemon, %Grapple.Hook{url: "my-api"})
