@@ -3,14 +3,14 @@ defmodule Grapple.Mixfile do
 
   def project do
     [app: :grapple,
-     version: "1.1.0",
+     version: "1.2.0",
      elixir: "~> 1.3",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      description: "Webhook magic in Elixir",
      package: package,
      deps: deps(),
-   
+
      # Docs
      name: "Grapple",
      source_url: "https://github.com/camirmas/grapple",
@@ -32,7 +32,7 @@ defmodule Grapple.Mixfile do
   # Type "mix help compile.app" for more information
   def application do
     [
-      applications: [:httpoison, :logger, :plug, :gen_stage, :timex],
+      applications: [:httpoison, :logger, :gen_stage],
       mod: {Grapple, []},
     ]
   end
@@ -50,11 +50,8 @@ defmodule Grapple.Mixfile do
     [
       {:graphql, "~> 0.3"},
       {:httpoison, "~> 0.9.0"},
-      {:uuid, "~> 1.1"},
-      {:plug, "~> 1.2.0"},
       {:gen_stage, "~> 0.4"},
       {:ex_doc, "~> 0.13", only: :dev},
-      {:timex, "~> 3.0"},
     ]
   end
 end

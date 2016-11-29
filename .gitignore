@@ -17,3 +17,5 @@ erl_crash.dump
 *.ez
 
 /rethinkdb_data
+
+mix.lock
