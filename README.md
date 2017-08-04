@@ -117,7 +117,7 @@ Grapple.subscribe(:pokemon, %Grapple.Hook{url: "my-api", interval: 3000}
 
 You can also take an existing hook that does not yet have an interval, and tell
 it to start polling:
-```elxir
+```elixir
 {:ok, pid} = Grapple.subscribe(:pokemon, %Grapple.Hook{url: "my-api", interval: 3000}
 Grapple.start_polling(pid, 3000)
 ```
