@@ -10,6 +10,7 @@ defmodule Grapple.Mixfile do
      description: "Webhook magic in Elixir",
      package: package,
      deps: deps(),
+     elixirc_paths: elixirc_paths(Mix.env),
 
      # Docs
      name: "Grapple",
@@ -18,6 +19,10 @@ defmodule Grapple.Mixfile do
             canonical: "https://hexdocs.com/grapple",
             extras: ["README.md"]]]
   end
+
+  # Specifies which paths to compile per environment.
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(_),     do: ["lib"]
 
   def package do
     [
