@@ -100,9 +100,11 @@ defmodule Grapple.HookServer do
       case {ref, pid} in monitors do
         true ->
           true = Process.demonitor(ref)
+          [{^pid, hook}] = :ets.lookup(hooks, pid)
           true = :ets.delete(hooks, pid)
           new_monitors = List.delete(monitors, {ref, pid})
-          new_state = %{state | monitors: new_monitors}
+          new_hook = add_hook(hooks, hook, hook_sup)
+          new_state = %{state | monitors: [new_monitors]}
 
           {:noreply, new_state}
         _ ->

@@ -8,7 +8,7 @@ defmodule HookTest do
   setup do
     Grapple.clear_topics
     {:ok, topic} = Grapple.add_topic :pokemon
-    hook = Map.put(@hook, :owner, self)
+    hook = Map.put(@hook, :owner, self())
 
     [topic: topic, hook: hook]
   end
@@ -37,14 +37,15 @@ defmodule HookTest do
       assert [{^pid, []}] = Grapple.get_responses(topic.name)
     end
 
-    test "if a hook goes down in an abnormal way, it should be removed",
+    test "if a hook goes down in an abnormal way, it should be restarted",
       %{topic: topic, hook: hook} do
         {:ok, pid} = Grapple.subscribe(topic.name, hook)
         ref = Process.monitor(pid)
         Process.exit(pid, :kill)
         assert_receive {:DOWN, ^ref, _, _, _}
 
-        assert [] = Grapple.get_hooks(topic.name)
+        assert [{new_pid, %Hook{}}] = Grapple.get_hooks(topic.name)
+        refute new_pid == pid
     end
   end
 

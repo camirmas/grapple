@@ -2,8 +2,6 @@ defmodule Grapple.Server do
   @moduledoc false
   use GenServer
 
-  @backend Application.get_env(:grapple, :backend) || Grapple.Ets
-
   defmodule Topic do
     defstruct [:sup, :name,]
   end
