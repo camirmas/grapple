@@ -13,7 +13,7 @@ This API lends itself nicely to Webhooks, REST Hooks, Server Push, and more!
 
   ```elixir
   def deps do
-    [{:grapple, "~> 1.2.0"}]
+    [{:grapple, "~> 1.2.1"}]
   end
   ```
 
@@ -32,7 +32,7 @@ iex -S mix
 ```
 
 ## Documentation
-https://hexdocs.pm/grapple/1.2.0
+https://hexdocs.pm/grapple/1.2.1
 
 ---
 
