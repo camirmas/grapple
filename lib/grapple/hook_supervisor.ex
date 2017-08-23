@@ -9,7 +9,7 @@ defmodule Grapple.HookSupervisor do
   end
 
   def init(_) do
-    opts = [restart: :permanent]
+    opts = [restart: :temporary]
     children = [worker(Grapple.Hook, [], opts)]
     supervise children, strategy: :simple_one_for_one
   end
