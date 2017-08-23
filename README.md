@@ -1,7 +1,7 @@
 # Grapple
 > :green_apple: Webhook magic in Elixir
 
-[![CircleCI](https://circleci.com/gh/camirmas/grapple/tree/master.svg?style=shield)](https://circleci.com/gh/camirmas/grapple/tree/master)
+[![Build Status](https://travis-ci.org/camirmas/grapple.svg?branch=master)](https://travis-ci.org/camirmas/grapple)
 
 Grapple defines a simple API for hookable actions that broadcast updates to subscribers over HTTP.
 
