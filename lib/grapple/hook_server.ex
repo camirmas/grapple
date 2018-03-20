@@ -1,8 +1,7 @@
 defmodule Grapple.HookServer do
   @moduledoc false
   use GenServer
-  alias Grapple.Hook
-  #alias Experimental.Flow
+  alias Grapple.{Hook, HookSupervisor}
 
   # API
 
@@ -38,78 +37,55 @@ defmodule Grapple.HookServer do
 
   def init(topic) do
     hook_sup = :"#{topic}HookSupervisor"
-    hooks = :ets.new(:hooks, [:private])
-    state = %{hooks: hooks, hook_sup: hook_sup, monitors: []}
+    state = %{hook_sup: hook_sup}
     {:ok, state}
   end
 
-  def handle_call({:subscribe, hook}, _from, %{hooks: hooks,
-    hook_sup: hook_sup, monitors: monitors} = state) do
-      monitor = {_ref, pid} =
-        add_hook(hooks, hook, hook_sup)
-        |> monitor_hook
+  def handle_call({:subscribe, hook}, _from, %{hook_sup: hook_sup} = state) do
+      pid = add_hook(hook, hook_sup)
 
-      new_monitors = [monitor | monitors]
-      {:reply, {:ok, pid},
-        %{state | monitors: new_monitors}}
+      {:reply, {:ok, pid}, state}
   end
 
-  def handle_call(:get_hooks, _from, %{hooks: hooks} = state) do
+  def handle_call(:get_hooks, _from, %{hook_sup: hook_sup} = state) do
     hooks =
-      hooks
-      |> :ets.tab2list
+      hook_sup
+      |> DynamicSupervisor.which_children()
+      |> Enum.map(fn {_, pid, _, _} -> {pid, Hook.get_info(pid)} end)
 
     {:reply, hooks, state}
   end
 
-  def handle_call(:get_responses, _from, %{hooks: hooks} = state) do
+  def handle_call(:get_responses, _from, %{hook_sup: hook_sup} = state) do
     responses =
-      hooks
-      |> :ets.tab2list
-      |> Enum.map(fn {pid, _hook} -> {pid, Hook.get_responses(pid)} end)
+      hook_sup
+      |> DynamicSupervisor.which_children()
+      |> Enum.map(fn {_, pid, _, _} -> {pid, Hook.get_responses(pid)} end)
 
     {:reply, responses, state}
   end
 
-  def handle_cast({:remove_hook, hook_pid}, %{hooks: hooks,
-    hook_sup: hook_sup} = state) do
-      Supervisor.terminate_child(hook_sup, hook_pid)
-      :ets.delete(hooks, hook_pid)
+  def handle_cast({:remove_hook, hook_pid},
+    %{hook_sup: hook_sup} = state) do
+      HookSupervisor.terminate_child(hook_sup, hook_pid)
 
       {:noreply, state}
   end
 
-  def handle_cast(:broadcast, %{hooks: hooks} = state) do
-    hooks
-    |> :ets.tab2list
-    |> Enum.each(fn {pid, _hook} -> Hook.broadcast(pid) end)
+  def handle_cast(:broadcast, %{hook_sup: hook_sup} = state) do
+    hook_sup
+    |> HookSupervisor.which_children()
+    |> Enum.each(fn {_, pid, _, _} -> Hook.broadcast(pid) end)
 
     {:noreply, state}
   end
 
-  def handle_cast({:broadcast, body}, %{hooks: hooks} = state) do
-    hooks
-    |> :ets.tab2list
-    |> Enum.each(fn {pid, _hook} -> Hook.broadcast(pid, body) end)
+  def handle_cast({:broadcast, body}, %{hook_sup: hook_sup} = state) do
+    hook_sup
+    |> HookSupervisor.which_children()
+    |> Enum.each(fn {_, pid, _, _} -> Hook.broadcast(pid, body) end)
 
     {:noreply, state}
-  end
-
-  def handle_info({:DOWN, ref, _, pid, _}, %{hooks: hooks,
-    monitors: monitors, hook_sup: hook_sup} = state) do
-      case {ref, pid} in monitors do
-        true ->
-          true = Process.demonitor(ref)
-          [{^pid, hook}] = :ets.lookup(hooks, pid)
-          true = :ets.delete(hooks, pid)
-          new_monitors = List.delete(monitors, {ref, pid})
-          new_hook = add_hook(hooks, hook, hook_sup)
-          new_state = %{state | monitors: [new_monitors]}
-
-          {:noreply, new_state}
-        _ ->
-          {:noreply, state}
-      end
   end
 
   def handle_info(_msg, state) do
@@ -118,16 +94,9 @@ defmodule Grapple.HookServer do
 
   # Private
 
-  defp monitor_hook(pid) do
-    ref = Process.monitor(pid)
-
-    {ref, pid}
-  end
-
-  defp add_hook(hooks, hook, hook_sup) do
+  defp add_hook(hook, hook_sup) do
     # Creates a new supervised hook and inserts it into the :ets table.
-    {:ok, pid} = Supervisor.start_child(hook_sup, [hook])
-    :ets.insert(hooks, {pid, hook})
+    {:ok, pid} = HookSupervisor.start_child(hook_sup, hook)
 
     pid
   end
