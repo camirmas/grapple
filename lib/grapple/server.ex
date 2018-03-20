@@ -80,7 +80,7 @@ defmodule Grapple.Server do
 
       case topic do
         nil ->
-          {:ok, sup} = Supervisor.start_child(TopicsSupervisor, [topic_name])
+          {:ok, sup} = TopicsSupervisor.start_child(topic_name)
           new_topic = %Topic{sup: sup, name: topic_name}
           {:reply, {:ok, new_topic}, %{state | topics: [new_topic | topics]}}
         topic ->
@@ -93,7 +93,7 @@ defmodule Grapple.Server do
   end
 
   def handle_call(:clear_topics, _from, %{topics: topics} = state) do
-      Enum.each(topics, &(Supervisor.terminate_child(TopicsSupervisor, &1.sup)))
+      Enum.each(topics, &(TopicsSupervisor.terminate_child(&1.sup)))
 
       {:reply, :ok, %{state | topics: []}}
   end
@@ -105,7 +105,7 @@ defmodule Grapple.Server do
         nil ->
           {:noreply, state}
         %Topic{} ->
-          Supervisor.terminate_child(TopicsSupervisor, topic.sup)
+          TopicsSupervisor.terminate_child(topic.sup)
           new_topics = List.delete(topics, topic)
           {:noreply, %{state | topics: new_topics}}
       end
