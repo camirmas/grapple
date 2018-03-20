@@ -3,7 +3,7 @@ defmodule Grapple.TopicsSupervisor do
   use Supervisor
   import Supervisor.Spec
 
-  def start_link(_) do
+  def start_link do
     Supervisor.start_link(__MODULE__, [], name: __MODULE__)
   end
 

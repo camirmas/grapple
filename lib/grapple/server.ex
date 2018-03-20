@@ -6,10 +6,12 @@ defmodule Grapple.Server do
     defstruct [:sup, :name,]
   end
 
+  alias Grapple.TopicsSupervisor
+
   # API
 
-  def start_link(topics_sup) do
-    GenServer.start_link(__MODULE__, topics_sup, name: __MODULE__)
+  def start_link do
+    GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
   end
 
   def add_topic(topic) do
@@ -68,18 +70,17 @@ defmodule Grapple.Server do
 
   # Callbacks
 
-  def init(topics_sup) do
-    state = %{topics: [], topics_sup: topics_sup}
+  def init(:ok) do
+    state = %{topics: []}
     {:ok, state}
   end
 
-  def handle_call({:add_topic, topic_name}, _from, %{topics_sup: topics_sup,
-    topics: topics} = state) do
+  def handle_call({:add_topic, topic_name}, _from, %{topics: topics} = state) do
       topic = Enum.find(topics, fn topic -> topic.name == topic_name end)
 
       case topic do
         nil ->
-          {:ok, sup} = Supervisor.start_child(topics_sup, [topic_name])
+          {:ok, sup} = Supervisor.start_child(TopicsSupervisor, [topic_name])
           new_topic = %Topic{sup: sup, name: topic_name}
           {:reply, {:ok, new_topic}, %{state | topics: [new_topic | topics]}}
         topic ->
@@ -91,22 +92,20 @@ defmodule Grapple.Server do
     {:reply, topics, state}
   end
 
-  def handle_call(:clear_topics, _from, %{topics: topics,
-    topics_sup: topics_sup} = state) do
-      Enum.each(topics, &(Supervisor.terminate_child(topics_sup, &1.sup)))
+  def handle_call(:clear_topics, _from, %{topics: topics} = state) do
+      Enum.each(topics, &(Supervisor.terminate_child(TopicsSupervisor, &1.sup)))
 
       {:reply, :ok, %{state | topics: []}}
   end
 
-  def handle_cast({:remove_topic, topic_name}, %{topics: topics,
-    topics_sup: topics_sup} = state) do
+  def handle_cast({:remove_topic, topic_name}, %{topics: topics} = state) do
       topic = Enum.find(topics, fn topic -> topic.name == topic_name end)
 
       case topic do
         nil ->
           {:noreply, state}
         %Topic{} ->
-          Supervisor.terminate_child(topics_sup, topic.sup)
+          Supervisor.terminate_child(TopicsSupervisor, topic.sup)
           new_topics = List.delete(topics, topic)
           {:noreply, %{state | topics: new_topics}}
       end
