@@ -3,7 +3,7 @@ defmodule Grapple.Mixfile do
 
   def project do
     [app: :grapple,
-     version: "1.2.2",
+     version: "1.2.3",
      elixir: "~> 1.6.4",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
