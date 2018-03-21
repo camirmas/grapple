@@ -1,15 +1,23 @@
 defmodule Grapple.TopicsSupervisor do
   @moduledoc false
-  use Supervisor
-  import Supervisor.Spec
+  use DynamicSupervisor
 
-  def start_link(_) do
-    Supervisor.start_link(__MODULE__, [], name: __MODULE__)
+  alias Grapple.TopicSupervisor
+
+  def start_link do
+    DynamicSupervisor.start_link(__MODULE__, :ok, name: __MODULE__)
   end
 
-  def init(_) do
-    opts = [restart: :temporary]
-    children = [supervisor(Grapple.TopicSupervisor, [], opts)]
-    supervise children, strategy: :simple_one_for_one
+  def init(:ok) do
+    DynamicSupervisor.init(strategy: :one_for_one)
+  end
+
+  def start_child(topic_name) do
+    spec = %{id: TopicSupervisor, start: {TopicSupervisor, :start_link, [topic_name]}}
+    DynamicSupervisor.start_child(__MODULE__, spec)
+  end
+
+  def terminate_child(pid) do
+    DynamicSupervisor.terminate_child(__MODULE__, pid)
   end
 end

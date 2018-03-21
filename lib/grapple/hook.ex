@@ -24,6 +24,10 @@ defmodule Grapple.Hook do
     GenServer.start_link __MODULE__, hook
   end
 
+  def get_info(pid) do
+    GenServer.call pid, :get_info
+  end
+
   def get_responses(pid) do
     GenServer.call pid, :get_responses
   end
@@ -62,6 +66,10 @@ defmodule Grapple.Hook do
 
   def init(hook) do
     {:ok, %{responses: [], hook: hook, tref: nil}}
+  end
+
+  def handle_call(:get_info, _from, %{hook: hook} = state) do
+    {:reply, hook, state}
   end
 
   def handle_call(:get_responses, _from, %{responses: responses} = state) do
