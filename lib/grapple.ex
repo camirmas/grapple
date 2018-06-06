@@ -8,7 +8,7 @@ defmodule Grapple do
   use Application
 
   def start(_type, _args) do
-    Grapple.Supervisor.start_link []
+    Grapple.Supervisor.start_link([])
   end
 
   # Topics
@@ -43,7 +43,7 @@ defmodule Grapple do
       true
   """
   def get_topics do
-    Grapple.Server.get_topics
+    Grapple.Server.get_topics()
   end
 
   @doc """
@@ -52,7 +52,7 @@ defmodule Grapple do
   Returns `:ok`.
   """
   def clear_topics do
-    Grapple.Server.clear_topics
+    Grapple.Server.clear_topics()
   end
 
   # Hooks
@@ -194,10 +194,10 @@ defmodule Grapple do
   defmacro defhook({name, _, _} = func, do: block) do
     quote do
       def unquote(func) do
-        topic  = unquote name
-        result = unquote block
+        topic = unquote(name)
+        result = unquote(block)
 
-        broadcast topic, result
+        broadcast(topic, result)
 
         result
       end

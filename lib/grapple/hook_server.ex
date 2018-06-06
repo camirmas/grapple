@@ -42,9 +42,9 @@ defmodule Grapple.HookServer do
   end
 
   def handle_call({:subscribe, hook}, _from, %{hook_sup: hook_sup} = state) do
-      pid = add_hook(hook, hook_sup)
+    pid = add_hook(hook, hook_sup)
 
-      {:reply, {:ok, pid}, state}
+    {:reply, {:ok, pid}, state}
   end
 
   def handle_call(:get_hooks, _from, %{hook_sup: hook_sup} = state) do
@@ -65,11 +65,10 @@ defmodule Grapple.HookServer do
     {:reply, responses, state}
   end
 
-  def handle_cast({:remove_hook, hook_pid},
-    %{hook_sup: hook_sup} = state) do
-      HookSupervisor.terminate_child(hook_sup, hook_pid)
+  def handle_cast({:remove_hook, hook_pid}, %{hook_sup: hook_sup} = state) do
+    HookSupervisor.terminate_child(hook_sup, hook_pid)
 
-      {:noreply, state}
+    {:noreply, state}
   end
 
   def handle_cast(:broadcast, %{hook_sup: hook_sup} = state) do
