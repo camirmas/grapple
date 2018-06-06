@@ -53,8 +53,7 @@ defmodule Grapple.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      {:graphql, "~> 0.3"},
-      {:httpoison, "~> 0.9.0"},
+      {:httpoison, "~> 1.0"},
       {:gen_stage, "~> 0.4"},
       {:ex_doc, "~> 0.13", only: :dev},
     ]
