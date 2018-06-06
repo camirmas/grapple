@@ -12,6 +12,7 @@ defmodule Grapple.TopicSupervisor do
       supervisor(Grapple.HookSupervisor, [topic]),
       worker(Grapple.HookServer, [topic])
     ]
-    supervise children, strategy: :one_for_all
+
+    supervise(children, strategy: :one_for_all)
   end
 end

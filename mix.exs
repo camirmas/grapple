@@ -2,27 +2,28 @@ defmodule Grapple.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :grapple,
-     version: "1.2.3",
-     elixir: "~> 1.6.4",
-     build_embedded: Mix.env == :prod,
-     start_permanent: Mix.env == :prod,
-     description: "Webhook magic in Elixir",
-     package: package,
-     deps: deps(),
-     elixirc_paths: elixirc_paths(Mix.env),
+    [
+      app: :grapple,
+      version: "1.2.3",
+      elixir: "~> 1.6.4",
+      build_embedded: Mix.env() == :prod,
+      start_permanent: Mix.env() == :prod,
+      description: "Webhook magic in Elixir",
+      package: package(),
+      deps: deps(),
+      elixirc_paths: elixirc_paths(Mix.env()),
 
-     # Docs
-     name: "Grapple",
-     source_url: "https://github.com/camirmas/grapple",
-     docs: [# logo: "",
-            canonical: "https://hexdocs.com/grapple",
-            extras: ["README.md"]]]
+      # Docs
+      name: "Grapple",
+      source_url: "https://github.com/camirmas/grapple",
+      # logo: "",
+      docs: [canonical: "https://hexdocs.com/grapple", extras: ["README.md"]]
+    ]
   end
 
   # Specifies which paths to compile per environment.
   defp elixirc_paths(:test), do: ["lib", "test/support"]
-  defp elixirc_paths(_),     do: ["lib"]
+  defp elixirc_paths(_), do: ["lib"]
 
   def package do
     [
@@ -38,7 +39,7 @@ defmodule Grapple.Mixfile do
   def application do
     [
       applications: [:httpoison, :logger, :gen_stage],
-      mod: {Grapple, []},
+      mod: {Grapple, []}
     ]
   end
 
@@ -53,10 +54,9 @@ defmodule Grapple.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      {:graphql, "~> 0.3"},
-      {:httpoison, "~> 0.9.0"},
+      {:httpoison, "~> 1.0"},
       {:gen_stage, "~> 0.4"},
-      {:ex_doc, "~> 0.13", only: :dev},
+      {:ex_doc, "~> 0.13", only: :dev}
     ]
   end
 end

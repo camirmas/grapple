@@ -15,45 +15,45 @@ defmodule Grapple.Hook do
     body: %{},
     headers: [],
     options: [],
-    query: %{},
+    query: %{}
   ]
 
   # API
 
   def start_link(hook) do
-    GenServer.start_link __MODULE__, hook
+    GenServer.start_link(__MODULE__, hook)
   end
 
   def get_info(pid) do
-    GenServer.call pid, :get_info
+    GenServer.call(pid, :get_info)
   end
 
   def get_responses(pid) do
-    GenServer.call pid, :get_responses
+    GenServer.call(pid, :get_responses)
   end
 
   def start_polling(pid) do
-    GenServer.call pid, :start_polling
+    GenServer.call(pid, :start_polling)
   end
 
   def start_polling(pid, interval) when is_integer(interval) do
-    GenServer.call pid, {:start_polling, interval}
+    GenServer.call(pid, {:start_polling, interval})
   end
 
   def broadcast(pid) do
-    GenServer.cast pid, :broadcast
+    GenServer.cast(pid, :broadcast)
   end
 
   def broadcast(pid, body) when is_nil(body) do
-    GenServer.cast pid, :broadcast
+    GenServer.cast(pid, :broadcast)
   end
 
   def broadcast(pid, body) do
-    GenServer.cast pid, {:broadcast, body}
+    GenServer.cast(pid, {:broadcast, body})
   end
 
   def stop_polling(pid) do
-    GenServer.cast pid, :stop_polling
+    GenServer.cast(pid, :stop_polling)
   end
 
   # Callbacks
@@ -80,6 +80,7 @@ defmodule Grapple.Hook do
     case interval do
       nil ->
         {:reply, {:error, "No interval specified, use `start_polling/2`."}, state}
+
       _ ->
         {:ok, tref} = start_timer(interval)
 
@@ -95,19 +96,19 @@ defmodule Grapple.Hook do
   end
 
   def handle_cast(:broadcast, %{hook: hook, responses: responses} = state) do
-      response = notify(hook, hook.body)
-      new_state = %{state | responses: [response | responses]}
-      send_to_owner(hook, response)
+    response = notify(hook, hook.body)
+    new_state = %{state | responses: [response | responses]}
+    send_to_owner(hook, response)
 
-      {:noreply, new_state}
+    {:noreply, new_state}
   end
 
   def handle_cast({:broadcast, body}, %{hook: hook, responses: responses} = state) do
-      response = notify(hook, body)
-      new_state = %{state | responses: [response | responses]}
-      send_to_owner(hook, response)
+    response = notify(hook, body)
+    new_state = %{state | responses: [response | responses]}
+    send_to_owner(hook, response)
 
-      {:noreply, new_state}
+    {:noreply, new_state}
   end
 
   def handle_cast(:stop_polling, %{tref: tref} = state) do
@@ -136,7 +137,7 @@ defmodule Grapple.Hook do
 
   defp send_to_owner(%{owner: owner}, response) when is_pid(owner) do
     if Process.alive?(owner) do
-      send(owner, {:hook_response, self, response})
+      send(owner, {:hook_response, self(), response})
     end
   end
 
@@ -144,10 +145,7 @@ defmodule Grapple.Hook do
 
   defp start_timer(interval) do
     # Uses Erlang :timer to `broadcast` at the given interval
-    :timer.apply_interval(interval,
-                          __MODULE__,
-                          :broadcast,
-                          [self])
+    :timer.apply_interval(interval, __MODULE__, :broadcast, [self()])
   end
 
   defp stop_timer(tref) when is_nil(tref) do

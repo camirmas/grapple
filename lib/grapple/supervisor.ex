@@ -18,6 +18,6 @@ defmodule Grapple.Supervisor do
   end
 
   def init(_) do
-    supervise [], strategy: :one_for_all
+    supervise([], strategy: :one_for_all)
   end
 end
